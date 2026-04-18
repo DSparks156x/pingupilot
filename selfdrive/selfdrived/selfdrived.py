@@ -404,7 +404,7 @@ class SelfdriveD(CruiseHelper):
       # Check for mismatch between openpilot and car's PCM.
       # Jeep Brake Hold legitimately asserts ACC state while openpilot is disabled
       # (at standstill, Jeep-only); suppress the mismatch counter during that window.
-      brake_hold_active = self.sm.valid['carStateSP'] and bool(self.sm['carStateSP'].brakeHoldActive)
+      brake_hold_active = bool(CS.brakeHoldActive)
       cruise_mismatch = CS.cruiseState.enabled and (not self.enabled or not self.CP.pcmCruise) and not brake_hold_active
       self.cruise_mismatch_counter = self.cruise_mismatch_counter + 1 if cruise_mismatch else 0
       if self.cruise_mismatch_counter > int(6. / DT_CTRL):
