@@ -86,7 +86,8 @@ class SteeringLayoutMici(NavScroller):
     self._tq_self_tune_btn.set_subtitle_font_size(24)
     self._tq_self_tune = BigParamControl(tr("enable self-tune"), "LiveTorqueParamsToggle")
     self._tq_relaxed = BigParamControl(tr("less restrict"), "LiveTorqueParamsRelaxedToggle")
-    self._tq_self_tune_view = self._tq_self_tune_btn.link_sub_panel([self._tq_self_tune, self._tq_relaxed])
+    self._tq_speed_dep = BigParamControl(tr("speed dependent"), "SpeedDependentTorqueToggle")
+    self._tq_self_tune_view = self._tq_self_tune_btn.link_sub_panel([self._tq_self_tune, self._tq_relaxed, self._tq_speed_dep])
 
     self._tq_custom_btn = BigButtonSP(tr("custom tune"))
     self._tq_custom_btn.set_subtitle_font_size(24)
@@ -227,7 +228,8 @@ class SteeringLayoutMici(NavScroller):
     if not self_tune_on:
       self._tq_self_tune_btn.set_disabled()
     else:
-      self._tq_self_tune_btn.set_badges([(tr("enabled"), "on"), (tr("less-restrict"), _on_off(ui_state.params.get_bool("LiveTorqueParamsRelaxedToggle")))])
+      self._tq_self_tune_btn.set_badges([(tr("enabled"), "on"), (tr("less-restrict"), _on_off(ui_state.params.get_bool("LiveTorqueParamsRelaxedToggle"))),
+                                          (tr("speed-dependent"), _on_off(ui_state.params.get_bool("SpeedDependentTorqueToggle")))])
 
     if not custom_on:
       self._tq_custom_btn.set_disabled()
@@ -241,8 +243,10 @@ class SteeringLayoutMici(NavScroller):
     if gui_app.widget_in_stack(self._tq_self_tune_view):
       self._tq_self_tune.refresh()
       self._tq_relaxed.refresh()
+      self._tq_speed_dep.refresh()
       self._tq_self_tune.set_enabled(offroad)
       self._tq_relaxed.set_enabled(lambda: self._tq_self_tune._checked)
+      self._tq_speed_dep.set_enabled(lambda: self._tq_self_tune._checked)
 
     if gui_app.widget_in_stack(self._tq_custom_view):
       self._tq_custom.refresh()
