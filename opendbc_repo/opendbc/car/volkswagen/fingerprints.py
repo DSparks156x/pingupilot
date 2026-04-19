@@ -992,6 +992,14 @@ FW_VERSIONS = {
       b'\xf1\x878R0907561A\x00\xf1\x890410\xf1\x80100',
     ],
   },
+  CAR.AUDI_TT_MK2: {
+    (Ecu.engine, 0x7e0, None): [
+      b'\xf1\x878J0907115AE\xf1\x890020',
+    ],
+    (Ecu.srs, 0x715, None): [
+      b'\xf1\x878J0959655  \xf1\x890020',
+    ],
+  },
   CAR.PORSCHE_MACAN_MK1: {
     (Ecu.engine, 0x7e0, None): [
       b'\xf1\x8795B906259BJ\xf1\x890001',

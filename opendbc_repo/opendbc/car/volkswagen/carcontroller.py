@@ -5,6 +5,7 @@ from opendbc.car.lateral import apply_driver_steer_torque_limits
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.interfaces import CarControllerBase
 from opendbc.car.volkswagen import mlbcan, mqbcan, pqcan
+from opendbc.car.volkswagen.centeringforce import VirtualCenteringForce
 from opendbc.car.volkswagen.values import CanBus, CarControllerParams, VolkswagenFlags
 
 VisualAlert = structs.CarControl.HUDControl.VisualAlert
@@ -43,6 +44,8 @@ class CarController(CarControllerBase):
 
     if CP.flags & VolkswagenFlags.PQ:
       self.CCS = pqcan
+      self.CCP.STEER_DELTA_UP = self.CP_SP.volkswagenHCADeltaRate
+      self.CCP.STEER_DELTA_DOWN = self.CP_SP.volkswagenHCADeltaRate
     elif CP.flags & VolkswagenFlags.MLB:
       self.CCS = mlbcan
     else:
@@ -51,6 +54,11 @@ class CarController(CarControllerBase):
     self.apply_torque_last = 0
     self.gra_acc_counter_last = None
     self.hca_mitigation = HCAMitigation(self.CCP)
+
+    # Virtual centering force for HCA7 + Centering mode (PQ only)
+    self.use_virtual_centering = (CP.flags & VolkswagenFlags.PQ) and self.CP_SP.volkswagenHCACentering
+    if self.use_virtual_centering:
+      self.virtual_centering = VirtualCenteringForce()
 
   def update(self, CC, CC_SP, CS, now_nanos):
     actuators = CC.actuators
@@ -65,10 +73,16 @@ class CarController(CarControllerBase):
         new_torque = int(round(actuators.torque * self.CCP.STEER_MAX))
         apply_torque = apply_driver_steer_torque_limits(new_torque, self.apply_torque_last, CS.out.steeringTorque, self.CCP)
 
+        # Apply virtual centering force: bias toward center, clipped so OP retains full ±STEER_MAX authority
+        if self.use_virtual_centering:
+          centering_bias = self.virtual_centering.compute(CS.out.steeringAngleDeg, CS.out.vEgo)
+          apply_torque = int(np.clip(apply_torque + centering_bias, -self.CCP.STEER_MAX, self.CCP.STEER_MAX))
+
       apply_torque = self.hca_mitigation.update(apply_torque, self.apply_torque_last)
       hca_enabled = apply_torque != 0
       self.apply_torque_last = apply_torque
-      can_sends.append(self.CCS.create_steering_control(self.packer_pt, self.CAN.pt, apply_torque, hca_enabled))
+      can_sends.append(self.CCS.create_steering_control(self.packer_pt, self.CAN.pt, apply_torque, hca_enabled,
+                                                         hca_status=self.CP_SP.volkswagenHCAMode if self.CP.flags & VolkswagenFlags.PQ else 7))
 
       if self.CP.flags & VolkswagenFlags.STOCK_HCA_PRESENT:
         # Pacify VW Emergency Assist driver inactivity detection by changing its view of driver steering input torque
@@ -80,8 +94,7 @@ class CarController(CarControllerBase):
         can_sends.append(self.CCS.create_eps_update(self.packer_pt, self.CAN.cam, CS.eps_stock_values, ea_simulated_torque))
 
     # **** Acceleration Controls ******************************************** #
-
-    if self.CP.openpilotLongitudinalControl:
+    if self.CP.openpilotLongitudinalControl and not (self.CP.flags & VolkswagenFlags.PQ_CC_ONLY):
       if self.frame % self.CCP.ACC_CONTROL_STEP == 0:
         acc_control = self.CCS.acc_control_value(CS.out.cruiseState.available, CS.out.accFaulted, CC.longActive)
         accel = float(np.clip(actuators.accel, self.CCP.ACCEL_MIN, self.CCP.ACCEL_MAX) if CC.longActive else 0)
@@ -105,7 +118,7 @@ class CarController(CarControllerBase):
       can_sends.append(self.CCS.create_lka_hud_control(self.packer_pt, self.CAN.pt, CS.ldw_stock_values, CC.latActive,
                                                        CS.out.steeringPressed, hud_alert, hud_control))
 
-    if self.frame % self.CCP.ACC_HUD_STEP == 0 and self.CP.openpilotLongitudinalControl:
+    if self.frame % self.CCP.ACC_HUD_STEP == 0 and self.CP.openpilotLongitudinalControl and not (self.CP.flags & VolkswagenFlags.PQ_CC_ONLY):
       lead_distance = 0
       if hud_control.leadVisible and self.frame * DT_CTRL > 1.0:  # Don't display lead until we know the scaling factor
         lead_distance = 512 if CS.upscale_lead_car_signal else 8
@@ -119,7 +132,7 @@ class CarController(CarControllerBase):
     # **** Stock ACC Button Controls **************************************** #
 
     gra_send_ready = self.CP.pcmCruise and CS.gra_stock_values["COUNTER"] != self.gra_acc_counter_last
-    if gra_send_ready and (CC.cruiseControl.cancel or CC.cruiseControl.resume):
+    if gra_send_ready and (CC.cruiseControl.cancel or CC.cruiseControl.resume) and not (self.CP.flags & VolkswagenFlags.PQ_CC_ONLY):
       can_sends.append(self.CCS.create_acc_buttons_control(self.packer_pt, self.CAN.ext, CS.gra_stock_values,
                                                            cancel=CC.cruiseControl.cancel, resume=CC.cruiseControl.resume))
 
