@@ -146,7 +146,7 @@ class VehicleLayoutMici(NavScroller):
     if back_callback is not None:
       self.set_back_callback(back_callback)
 
-    self._brand = None
+    self._brand = object()
     self._brand_settings = None
 
     self._platform_selector = PlatformSelectorMici(self._update_brand_settings)
