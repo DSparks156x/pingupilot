@@ -36,7 +36,14 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     self.diag_pq = BigButton(tr("Diag: Is PQ"), "", scroll=True)
     self.diag_long = BigButton(tr("Diag: Is Long"), "", scroll=True)
 
-    self.items = []
+    self.items = [
+      self.diag_platform,
+      self.diag_pq,
+      self.diag_long,
+      self.hca_mode,
+      self.hca_delta_rate,
+      self.experimental_long,
+    ]
 
   def update_settings(self):
     platform = None
@@ -47,13 +54,17 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       platform = ui_state.CP.carFingerprint
 
     if platform is None:
-      self.items = []
+      for item in self.items:
+        item.set_visible(False)
+      self.diag_platform.set_visible(True)
+      self.diag_platform.set_value("None")
       return
 
     from opendbc.car.volkswagen.values import CAR as VW_CAR
     is_pq = False
     is_long_available = False
 
+    diag_flags = "None"
     if bundle and platform in VW_CAR.__members__:
       config = VW_CAR[platform].config
       is_pq = config.flags & VolkswagenFlags.PQ
@@ -68,21 +79,14 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       is_pq = config.flags & VolkswagenFlags.PQ
       is_long_available = is_pq
       diag_flags = hex(int(config.flags))
-    else:
-      diag_flags = "None"
 
     self.diag_platform.set_value(str(platform))
     self.diag_pq.set_value(f"{bool(is_pq)} ({diag_flags})")
     self.diag_long.set_value(str(is_long_available))
 
-    items = [self.diag_platform, self.diag_pq, self.diag_long]
-    if is_pq:
-      items.extend([
-        self.hca_mode,
-        self.hca_delta_rate,
-      ])
-
-    if is_long_available:
-      items.append(self.experimental_long)
-
-    self.items = items
+    self.diag_platform.set_visible(True)
+    self.diag_pq.set_visible(True)
+    self.diag_long.set_visible(True)
+    self.hca_mode.set_visible(is_pq)
+    self.hca_delta_rate.set_visible(is_pq)
+    self.experimental_long.set_visible(is_long_available)
