@@ -29,6 +29,48 @@ CAR_LIST_JSON_OUT = os.path.join(BASEDIR, "sunnypilot", "selfdrive", "car", "car
 SP_ICON = "../../sunnypilot/selfdrive/assets/offroad"
 
 
+class VehicleModelSelectLayoutMici(NavScroller):
+  def __init__(self, make_name, nodes, on_platform_selected, back_callback: Callable[[], None] | None = None):
+    super().__init__()
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
+
+    self._make_name = make_name
+    self._nodes = nodes
+    self._on_platform_selected = on_platform_selected
+    
+    for node in nodes:
+      item = SettingsBigButton(node.data.get('display_name', node.ref), scroll=True)
+      item.set_click_callback(partial(self._on_model_selected, node.ref))
+      self._scroller.add_widget(item)
+
+  def _on_model_selected(self, ref):
+    if self._on_platform_selected:
+      self._on_platform_selected(ref, DialogResult.CONFIRM)
+
+
+class VehicleMakeSelectLayoutMici(NavScroller):
+  def __init__(self, folders, on_platform_selected, back_callback: Callable[[], None] | None = None):
+    super().__init__()
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
+
+    self._folders = folders
+    self._on_platform_selected = on_platform_selected
+    
+    for folder in folders:
+      item = SettingsBigButton(folder.folder, scroll=True)
+      item.set_click_callback(partial(self._on_make_selected, folder))
+      self._scroller.add_widget(item)
+
+  def _on_make_selected(self, folder):
+    def back_to_makes():
+      gui_app.pop_widget()
+    
+    model_layout = VehicleModelSelectLayoutMici(folder.folder, folder.nodes, self._on_platform_selected, back_to_makes)
+    gui_app.push_widget(model_layout)
+
+
 class PlatformSelectorMici(BigButton):
   def __init__(self, on_platform_change: Callable[[], None] | None = None):
     super().__init__(tr("Vehicle"), "", scroll=True)
