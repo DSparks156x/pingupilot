@@ -165,6 +165,7 @@ class WMI(StrEnum):
   SKODA = "TMB"
   SEAT = "VSS"
   AUDI_EUROPE_MPV = "WA1"
+  AUDI_HUNGARY = "TRU"
   AUDI_GERMANY_CAR = "WAU"
   MAN = "WMA"
   PORSCHE_SUV = "WP1"
@@ -178,6 +179,7 @@ class WMI(StrEnum):
 
 class VolkswagenSafetyFlags(IntFlag):
   LONG_CONTROL = 1
+  NO_EXT_CAN = 2
 
 
 class VolkswagenFlags(IntFlag):
@@ -188,6 +190,8 @@ class VolkswagenFlags(IntFlag):
   # Static flags
   PQ = 2
   MLB = 8
+  PQ_CC_ONLY = 16
+  NO_EXT_CAN = 32
 
 
 @dataclass
@@ -450,6 +454,13 @@ class CAR(Platforms):
     VolkswagenCarSpecs(mass=1895, wheelbase=2.81),
     chassis_codes={"8R"},
     wmis={WMI.AUDI_EUROPE_MPV, WMI.AUDI_GERMANY_CAR},
+  )
+  AUDI_TT_MK2 = VolkswagenPQPlatformConfig(
+    [VWCarDocs("Audi TT 2008-14")],
+    VolkswagenCarSpecs(mass=1469, wheelbase=2.468, steerRatio=16.9, centerToFrontRatio=0.41),
+    chassis_codes={"8J", "FK"},
+    wmis={WMI.AUDI_HUNGARY},
+    flags=VolkswagenFlags.PQ | VolkswagenFlags.PQ_CC_ONLY | VolkswagenFlags.NO_EXT_CAN,
   )
   PORSCHE_MACAN_MK1 = VolkswagenMLBPlatformConfig(
     [VWCarDocs("Porsche Macan 2017-24")],
