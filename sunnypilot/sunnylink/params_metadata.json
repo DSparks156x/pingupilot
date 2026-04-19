@@ -1391,5 +1391,45 @@
   "Version": {
     "title": "openpilot Version",
     "description": ""
+  },
+  "VolkswagenHCAMode": {
+    "title": "Volkswagen HCA Mode",
+    "description": "Select the HCA mode for Volkswagen vehicles. HCA 5 is standard, HCA 7 is for newer vehicles, HCA 7 Centering adds soft centering torque.",
+    "options": [
+      {
+        "value": 0,
+        "label": "HCA 5"
+      },
+      {
+        "value": 1,
+        "label": "HCA 7"
+      },
+      {
+        "value": 2,
+        "label": "HCA 7 Centering"
+      }
+    ]
+  },
+  "VolkswagenHCADeltaRate": {
+    "title": "Volkswagen HCA Delta Rate",
+    "description": "Select the steering torque rate limit for Volkswagen vehicles. Lower values are smoother, higher values allow faster steering corrections.",
+    "options": [
+      {
+        "value": 0,
+        "label": "±5"
+      },
+      {
+        "value": 1,
+        "label": "±10"
+      },
+      {
+        "value": 2,
+        "label": "±30"
+      },
+      {
+        "value": 3,
+        "label": "±50"
+      }
+    ]
   }
 }
