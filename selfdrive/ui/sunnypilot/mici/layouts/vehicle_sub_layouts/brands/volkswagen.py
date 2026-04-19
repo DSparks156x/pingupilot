@@ -35,18 +35,38 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     self.items = []
 
   def update_settings(self):
-    if ui_state.CP is None:
+    platform = None
+    if ui_state.CP is not None:
+      platform = ui_state.CP.carFingerprint
+    else:
+      bundle = ui_state.params.get("CarPlatformBundle")
+      if bundle:
+        platform = bundle.get("platform")
+
+    if platform is None:
       self.items = []
       return
 
+    from opendbc.car.volkswagen.values import CAR as VW_CAR
+    is_pq = False
+    is_long_available = False
+    if ui_state.CP is not None:
+      is_pq = ui_state.CP.flags & VolkswagenFlags.PQ
+      is_long_available = ui_state.CP.alphaLongitudinalAvailable
+    elif platform in VW_CAR.__members__:
+      config = VW_CAR[platform].config
+      is_pq = config.flags & VolkswagenFlags.PQ
+      # For PQ cars, longitudinal is generally available via Gateway
+      is_long_available = is_pq
+
     items = []
-    if ui_state.CP.flags & VolkswagenFlags.PQ:
+    if is_pq:
       items.extend([
         self.hca_mode,
         self.hca_delta_rate,
       ])
 
-    if ui_state.CP.alphaLongitudinalAvailable:
+    if is_long_available:
       items.append(self.experimental_long)
 
     self.items = items
