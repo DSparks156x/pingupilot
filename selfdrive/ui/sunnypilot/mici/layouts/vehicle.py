@@ -150,7 +150,6 @@ class VehicleLayoutMici(NavScroller):
     self._brand_settings = None
 
     self._platform_selector = PlatformSelectorMici(self._update_brand_settings)
-    self._scroller.add_widget(self._platform_selector)
 
     self._update_brand_settings()
 
@@ -169,7 +168,6 @@ class VehicleLayoutMici(NavScroller):
     if brand != self._brand:
       self._brand = brand
       self._scroller._items.clear()
-      self._scroller.add_widget(self._platform_selector)
 
       if self._brand:
         self._brand_settings = BrandSettingsFactoryMici.create_brand_settings(self._brand)
@@ -180,6 +178,7 @@ class VehicleLayoutMici(NavScroller):
         self._brand_settings = None
 
       self._scroller.add_widget(self._platform_selector)
+
   def _update_state(self):
     super()._update_state()
     self._platform_selector.refresh()
