@@ -86,6 +86,9 @@ class CarInterface(CarInterfaceBase):
       if ret.transmissionType == TransmissionType.manual:
         ret.minEnableSpeed = 4.5
 
+    if ret.flags & VolkswagenFlags.NO_EXT_CAN:
+      safety_configs[0].safetyParam |= VolkswagenSafetyFlags.NO_EXT_CAN.value
+
     # Per-vehicle overrides
 
     if candidate == CAR.PORSCHE_MACAN_MK1:

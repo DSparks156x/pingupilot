@@ -21,29 +21,26 @@ class CanBus(CanBusBase):
     super().__init__(CP, fingerprint)
 
     self._ext = self.offset
+    self._no_ext_can = False
     if CP is not None:
       self._ext = self.offset + 2 if CP.networkLocation == NetworkLocation.gateway else self.offset
+      self._no_ext_can = bool(CP.flags & VolkswagenFlags.NO_EXT_CAN)
 
   @property
   def pt(self) -> int:
-    # ADAS / Extended CAN, gateway side of the relay
-    return self.offset
+    return 1 if self._no_ext_can else self.offset
 
   @property
   def alt(self) -> int:
-    # NetworkLocation.fwdCamera: radar-camera object fusion CAN
-    # NetworkLocation.gateway: powertrain CAN
-    return self.offset + 1
+    return 1 if self._no_ext_can else self.offset + 1
 
   @property
   def cam(self) -> int:
-    # ADAS / Extended CAN, camera side of the relay
-    return self.offset + 2
+    return 1 if self._no_ext_can else self.offset + 2
 
   @property
   def ext(self) -> int:
-    # ADAS / Extended CAN, side of the relay with the ACC radar
-    return self._ext
+    return 1 if self._no_ext_can else self._ext
 
 
 class CarControllerParams:
@@ -74,7 +71,7 @@ class CarControllerParams:
       self.LDW_STEP = 5                   # LDW_1 message frequency 20Hz
       self.ACC_HUD_STEP = 4               # ACC_GRA_Anzeige frequency 25Hz
       self.STEER_DRIVER_ALLOWANCE = 80    # Driver intervention threshold 0.8 Nm
-      self.STEER_DELTA_UP = 6             # Max HCA reached in 1.00s (STEER_MAX / (50Hz * 1.00))
+      self.STEER_DELTA_UP = 10             # Max HCA reached in 1.00s (STEER_MAX / (50Hz * 1.00))
       self.STEER_DELTA_DOWN = 10          # Min HCA reached in 0.60s (STEER_MAX / (50Hz * 0.60))
 
       if CP.transmissionType == TransmissionType.automatic:
