@@ -7,7 +7,7 @@ See the LICENSE.md file in the root directory for more details.
 from openpilot.selfdrive.ui.sunnypilot.mici.layouts.vehicle_sub_layouts.brands.base import BrandSettingsMici
 from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.system.ui.lib.multilang import tr
-from openpilot.selfdrive.ui.mici.widgets.button import BigMultiParamToggle, BigParamControl, BigButton
+from openpilot.selfdrive.ui.mici.widgets.button import BigMultiParamToggle, BigParamControl
 from opendbc.car.volkswagen.values import VolkswagenFlags
 
 
@@ -32,14 +32,7 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       "AlphaLongitudinalEnabled"
     )
 
-    self.diag_platform = BigButton(tr("Diag: Platform"), "", scroll=True)
-    self.diag_pq = BigButton(tr("Diag: Is PQ"), "", scroll=True)
-    self.diag_long = BigButton(tr("Diag: Is Long"), "", scroll=True)
-
     self.items = [
-      self.diag_platform,
-      self.diag_pq,
-      self.diag_long,
       self.hca_mode,
       self.hca_delta_rate,
       self.experimental_long,
@@ -56,37 +49,24 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     if platform is None:
       for item in self.items:
         item.set_visible(False)
-      self.diag_platform.set_visible(True)
-      self.diag_platform.set_value("None")
       return
 
     from opendbc.car.volkswagen.values import CAR as VW_CAR
     is_pq = False
     is_long_available = False
 
-    diag_flags = "None"
     if bundle and platform in VW_CAR.__members__:
       config = VW_CAR[platform].config
-      is_pq = config.flags & VolkswagenFlags.PQ
-      is_long_available = is_pq
-      diag_flags = hex(int(config.flags))
+      is_pq = bool(config.flags & VolkswagenFlags.PQ)
+      is_long_available = is_pq and not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
     elif ui_state.CP is not None:
-      is_pq = ui_state.CP.flags & VolkswagenFlags.PQ
-      is_long_available = ui_state.CP.alphaLongitudinalAvailable
-      diag_flags = hex(int(ui_state.CP.flags))
+      is_pq = bool(ui_state.CP.flags & VolkswagenFlags.PQ)
+      is_long_available = ui_state.CP.alphaLongitudinalAvailable and not (ui_state.CP.flags & VolkswagenFlags.PQ_CC_ONLY)
     elif platform in VW_CAR.__members__:
       config = VW_CAR[platform].config
-      is_pq = config.flags & VolkswagenFlags.PQ
-      is_long_available = is_pq
-      diag_flags = hex(int(config.flags))
+      is_pq = bool(config.flags & VolkswagenFlags.PQ)
+      is_long_available = is_pq and not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
 
-    self.diag_platform.set_value(str(platform))
-    self.diag_pq.set_value(f"{bool(is_pq)} ({diag_flags})")
-    self.diag_long.set_value(str(is_long_available))
-
-    self.diag_platform.set_visible(True)
-    self.diag_pq.set_visible(True)
-    self.diag_long.set_visible(True)
     self.hca_mode.set_visible(is_pq)
     self.hca_delta_rate.set_visible(is_pq)
     self.experimental_long.set_visible(is_long_available)
