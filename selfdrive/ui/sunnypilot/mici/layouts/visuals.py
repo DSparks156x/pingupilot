@@ -64,7 +64,6 @@ class VisualsLayoutMici(NavScroller):
     super()._update_state()
     for _param, toggle in self._toggles.items():
       toggle.refresh()
-
     self._text_effect.refresh()
     self._chevron_info.refresh()
     self._dev_ui_info.refresh()

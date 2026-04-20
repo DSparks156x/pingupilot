@@ -141,35 +141,7 @@ class CellularIcon(Widget):
     rl.draw_texture_ex(draw_net_txt, rl.Vector2(draw_x, draw_y), 0.0, 1.0, rl.Color(255, 255, 255, int(255 * 0.9)))
 
 
-class RainbowLabel(Widget):
-  def __init__(self, text: str, font_size: int, font_weight: FontWeight):
-    super().__init__()
-    self._text = text
-    self._font_size = font_size
-    self._font_weight = font_weight
-    size = measure_text_cached(gui_app.font(font_weight), text, font_size)
-    self.set_rect(rl.Rectangle(0, 0, size.x, size.y))
 
-  @property
-  def font_size(self):
-    return self._font_size
-
-  def set_position(self, x, y):
-    self.set_rect(rl.Rectangle(x, y, self.rect.width, self.rect.height))
-
-  def _render(self, _):
-    t = rl.get_time()
-    hue_base = (t * 50) % 360
-
-    font = gui_app.font(self._font_weight)
-    x = self.rect.x
-    for i, char in enumerate(self._text):
-      hue = (hue_base + (i * 15)) % 360
-      color = rl.color_from_hsv(hue, 0.8, 1.0)
-      
-      char_size = measure_text_cached(font, char, self._font_size)
-      rl.draw_text_ex(font, char, rl.Vector2(x, self.rect.y), self._font_size, 0, color)
-      x += char_size.x
 
 
 class MiciHomeLayout(Widget):
@@ -202,7 +174,7 @@ class MiciHomeLayout(Widget):
       self._mic_icon,
     ], spacing=18)
 
-    self._openpilot_label = RainbowLabel("pingupilot", font_size=96, font_weight=FontWeight.DISPLAY)
+    self._openpilot_label = UnifiedLabel("pingupilot", font_size=96, font_weight=FontWeight.DISPLAY, max_width=480, wrap_text=False)
     self._version_label = UnifiedLabel("", font_size=36, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
     self._large_version_label = UnifiedLabel("", font_size=64, text_color=rl.GRAY, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
     self._date_label = UnifiedLabel("", font_size=36, text_color=rl.GRAY, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
@@ -218,7 +190,7 @@ class MiciHomeLayout(Widget):
     self._experimental_mode = ui_state.params.get_bool("ExperimentalMode")
     effect_param = ui_state.params.get("OpenpilotTextEffect")
     new_text_effect = int(effect_param) if effect_param is not None else 0
-    # self._openpilot_label.set_effect(TextEffect(new_text_effect)) # RainbowLabel doesn't have set_effect
+    self._openpilot_label.set_effect(TextEffect(new_text_effect))
 
   def _update_state(self):
     self._cellular_icon._update_state()
