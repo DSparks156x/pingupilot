@@ -18,6 +18,7 @@ def show_error_dialog(message: str, retry_callback: Callable[[], None] | None = 
   if retry_callback:
     dlg.set_back_callback(retry_callback)
 
+
   gui_app.push_widget(dlg)
 
 
