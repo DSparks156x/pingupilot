@@ -8,6 +8,9 @@ from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.text import wrap_text
 from openpilot.system.ui.widgets import Widget
 
+import os
+import random
+
 # Constants
 if gui_app.big_ui():
   PROGRESS_BAR_WIDTH = 1000
@@ -35,7 +38,26 @@ def clamp(value, min_value, max_value):
 class Spinner(Widget):
   def __init__(self):
     super().__init__()
-    self._comma_texture = gui_app.texture("../../sunnypilot/selfdrive/assets/images/spinner_sunnypilot.png", TEXTURE_SIZE, TEXTURE_SIZE)
+    # Randomized PinguPilot logo selection
+    branding_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../assets/branding"))
+    default_logo = "../../sunnypilot/selfdrive/assets/images/spinner_sunnypilot.png"
+    chosen_logo = default_logo
+
+    try:
+      if os.path.isdir(branding_dir):
+        images = []
+        for root, _, files in os.walk(branding_dir):
+          for f in files:
+            if f.lower().endswith(('.png', '.jpg', '.jpeg')):
+              # Get path relative to branding_dir
+              images.append(os.path.relpath(os.path.join(root, f), branding_dir))
+        
+        if images:
+          chosen_logo = f"../../assets/branding/{random.choice(images)}"
+    except Exception:
+      pass
+
+    self._comma_texture = gui_app.texture(chosen_logo, TEXTURE_SIZE, TEXTURE_SIZE)
     self._spinner_texture = gui_app.texture("images/spinner_track.png", TEXTURE_SIZE, TEXTURE_SIZE, alpha_premultiply=True)
     self._rotation = 0.0
     self._progress: int | None = None
