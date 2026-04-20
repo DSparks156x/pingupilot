@@ -398,6 +398,7 @@ def es10x_command(client: AtClient, data: bytes) -> bytes:
         break
       tag_hex = data[:8].hex().upper()
       raise RuntimeError(f"APDU failed with SW={sw1:02X}{sw2:02X} (Tag: {tag_hex}, Len: {len(data)})")
+
     sequence += 1
     if sequence == 256:
       sequence = 1
