@@ -119,9 +119,6 @@ class ModelsLayoutMici(NavScroller):
     bundles.sort(key=lambda b: b.index, reverse=True)
 
     btns = []
-    default_btn = BigButton(tr("default model"))
-    default_btn.set_click_callback(self._select_default)
-    btns.append(default_btn)
 
     for bundle in bundles:
       txt = bundle.displayName.lower()
