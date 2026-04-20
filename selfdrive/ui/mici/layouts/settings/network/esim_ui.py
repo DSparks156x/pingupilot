@@ -12,12 +12,12 @@ from openpilot.system.ui.lib.multilang import tr
 from openpilot.system.ui.widgets.scroller import NavScroller
 from openpilot.selfdrive.ui.mici.widgets.button import BigButton, BigToggle
 from openpilot.selfdrive.ui.mici.widgets.dialog import BigInputDialog, BigConfirmationDialog, BigDialog
+
 def show_error_dialog(message: str, retry_callback: Callable[[], None] | None = None):
   # scroll=True truncates everything after the first newline, so flatten the string
   dlg = BigDialog(tr("Error"), message.replace("\n", " | "), scroll=True)
   if retry_callback:
     dlg.set_back_callback(retry_callback)
-
 
   gui_app.push_widget(dlg)
 
