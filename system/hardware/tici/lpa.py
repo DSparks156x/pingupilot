@@ -577,9 +577,7 @@ def _split_bpp(bpp: bytes) -> list[bytes]:
   for tag, value, start, end in iter_tlv(root_value, with_positions=True):
     if tag == TAG_BPP_COMMAND:
       chunks.append(bpp[0 : val_start + end])
-    elif tag in (0xA0, 0xA2):
-      chunks.append(bpp[val_start + start : val_start + end])
-    elif tag in (0xA1, 0xA3):
+    elif tag in (0xA0, 0xA1, 0xA2, 0xA3):
       hdr_len = _parse_tlv_header_len(root_value[start:end])
       hdr = bpp[val_start + start : val_start + start + hdr_len]
       first = True
