@@ -582,11 +582,9 @@ def _split_bpp(bpp: bytes) -> list[bytes]:
       hdr = bpp[val_start + start : val_start + start + hdr_len]
       first = True
       for _, _, cs, ce in iter_tlv(value, with_positions=True):
-        if first:
-          chunks.append(hdr + value[cs:ce])
-          first = False
-        else:
-          chunks.append(value[cs:ce])
+        payload = hdr + value[cs:ce] if first else value[cs:ce]
+        first = False
+        chunks.append(encode_tlv(TAG_BPP_COMMAND, payload))
   return chunks
 
 
