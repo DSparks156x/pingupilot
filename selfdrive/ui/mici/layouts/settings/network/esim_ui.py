@@ -5,18 +5,19 @@ import json
 import os
 
 from openpilot.common.params import Params
+
 from openpilot.system.hardware import HARDWARE
 from openpilot.system.ui.lib.application import gui_app
 from openpilot.system.ui.lib.multilang import tr
 from openpilot.system.ui.widgets.scroller import NavScroller
 from openpilot.selfdrive.ui.mici.widgets.button import BigButton, BigToggle
 from openpilot.selfdrive.ui.mici.widgets.dialog import BigInputDialog, BigConfirmationDialog, BigDialog
-
 def show_error_dialog(message: str, retry_callback: Callable[[], None] | None = None):
   # scroll=True truncates everything after the first newline, so flatten the string
   dlg = BigDialog(tr("Error"), message.replace("\n", " | "), scroll=True)
   if retry_callback:
     dlg.set_back_callback(retry_callback)
+
   gui_app.push_widget(dlg)
 
 
@@ -37,6 +38,7 @@ class EsimProfileConfigLayout(NavScroller):
     
     # 1. Enable Toggle
     enable_toggle = BigToggle(tr("Enable Profile"), "", initial_state=self._profile.enabled, toggle_callback=self._on_enable_toggled)
+
     self._scroller.add_widget(enable_toggle)
 
     # 2. Rename Nickname
@@ -49,6 +51,7 @@ class EsimProfileConfigLayout(NavScroller):
     apn_btn.set_click_callback(self._on_apn_clicked)
     self._scroller.add_widget(apn_btn)
     
+
     # 3. Delete Profile
     delete_btn = BigButton(tr("Delete Profile"), tr("delete"), scroll=True)
     delete_btn.set_click_callback(self._on_delete_clicked)
@@ -60,6 +63,7 @@ class EsimProfileConfigLayout(NavScroller):
         self._lpa.switch_profile(self._profile.iccid)
       else:
         self._lpa.disable_profile(self._profile.iccid)
+
       self._refresh_callback()
     except Exception as e:
       show_error_dialog(str(e))
@@ -97,6 +101,7 @@ class EsimProfileConfigLayout(NavScroller):
     dlg = BigInputDialog(tr("enter Carrier APN (e.g. super)"), current_apn, minimum_length=0, confirm_callback=update_apn)
     gui_app.push_widget(dlg)
 
+
   def _on_delete_clicked(self):
     def confirm_delete():
       try:
@@ -109,6 +114,7 @@ class EsimProfileConfigLayout(NavScroller):
     msg = f"{tr('Are you sure you want to delete profile')} {self._profile.iccid}?\n{tr('This cannot be undone.')}"
     icon = gui_app.texture("icons_mici/settings/network/new/trash.png", 54, 64)
     dlg = BigConfirmationDialog(msg, icon, confirm_callback=confirm_delete, red=True)
+
     gui_app.push_widget(dlg)
 
 
@@ -125,6 +131,7 @@ class EsimManagementLayoutMici(NavScroller):
 
     self._profiles = []
     self._last_download_str = ""
+
     if self._lpa:
       self.refresh()
     else:
@@ -184,6 +191,7 @@ class EsimManagementLayoutMici(NavScroller):
       try:
         self._lpa.download_profile(download_str, confirmation_code=confirmation_code, nickname="")
         self._last_download_str = ""
+
         self.refresh()
       except Exception as e:
         if "Confirmation code required" in str(e) and not confirmation_code:
@@ -195,6 +203,7 @@ class EsimManagementLayoutMici(NavScroller):
           show_error_dialog(f"{tr('Download failed')}:\n{str(e)}", retry_callback=self._on_add_profile)
             
     dlg = BigInputDialog(tr("enter Activation Text (LPA:1$...)..."), self._last_download_str, minimum_length=0, confirm_callback=perform_download)
+
     gui_app.push_widget(dlg)
 
   def _on_profile_tapped(self, profile):
