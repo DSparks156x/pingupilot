@@ -57,29 +57,39 @@ class ModelsLayoutMici(NavScroller):
     self._download_frame = 0
     self._was_downloading = False
 
-    self.select_model_btn = BigButton(tr("select model"))
-    self.select_model_btn.set_click_callback(self._show_folders)
+    self.cached_models_btn = BigButton(tr("cached models"))
+    self.cached_models_btn.set_click_callback(self._show_cached_models)
+
+    self.download_models_btn = BigButton(tr("download models"))
+    self.download_models_btn.set_click_callback(self._show_download_models)
 
     self.cancel_download_btn = BigButton(tr("cancel download"))
     self.cancel_download_btn.set_click_callback(lambda: ui_state.params.remove("ModelManager_DownloadIndex"))
 
-    self.main_items = [self.current_model_info, self.select_model_btn, self.cancel_download_btn]
+    self.main_items = [self.current_model_info, self.cached_models_btn, self.download_models_btn, self.cancel_download_btn]
     self._scroller.add_widgets(self.main_items)
 
   @property
   def model_manager(self):
     return ui_state.sm["modelManagerSP"]
 
-  def _get_grouped_bundles(self, favorites = None):
+  def _get_grouped_bundles(self, favorites=None, uncached_only=False):
     bundles = self.model_manager.availableBundles
+    if uncached_only:
+      bundles = [b for b in bundles if b.status not in (custom.ModelManagerSP.DownloadStatus.downloaded, custom.ModelManagerSP.DownloadStatus.cached)]
+
     folders = {}
     for bundle in bundles:
       folder = next((override.value for override in bundle.overrides if override.key == "folder"), "")
       folders.setdefault(folder, []).append(bundle)
 
     if favorites:
-      for fav_bundle in [bundle for bundle in bundles if bundle.ref in favorites]:
-        folders.setdefault("favorites", []).append(fav_bundle)
+      fav_bundles = [bundle for bundle in self.model_manager.availableBundles if bundle.ref in favorites]
+      if uncached_only:
+        fav_bundles = [b for b in fav_bundles if b.status not in (custom.ModelManagerSP.DownloadStatus.downloaded, custom.ModelManagerSP.DownloadStatus.cached)]
+
+      if fav_bundles:
+        folders["favorites"] = fav_bundles
 
     return folders
 
@@ -90,22 +100,36 @@ class ModelsLayoutMici(NavScroller):
     self._scroller.scroll_panel.set_offset(0)
     self.set_back_callback(back_callback)
 
-  def _show_folders(self):
-    self.focused_widget = self.select_model_btn
+  def _show_cached_models(self):
+    self.focused_widget = self.cached_models_btn
+    bundles = [b for b in self.model_manager.availableBundles if b.status in (custom.ModelManagerSP.DownloadStatus.downloaded, custom.ModelManagerSP.DownloadStatus.cached)]
+    bundles.sort(key=lambda b: b.index, reverse=True)
+
+    btns = []
+    default_btn = BigButton(tr("default model"))
+    default_btn.set_click_callback(self._select_default)
+    btns.append(default_btn)
+
+    for bundle in bundles:
+      txt = bundle.displayName.lower()
+      btn = BigButton(txt)
+      btn.set_click_callback(lambda b=bundle: self._select_model(b))
+      btns.append(btn)
+    self._show_selection_view(btns, self._reset_main_view)
+
+  def _show_download_models(self):
+    self.focused_widget = self.download_models_btn
 
     favs = ui_state.params.get("ModelManager_Favs")
     favorites = set(favs.split(';')) if favs else set()
 
-    folders = self._get_grouped_bundles(favorites)
+    folders = self._get_grouped_bundles(favorites, uncached_only=True)
     folder_buttons = []
-    default_btn = BigButton(tr("default model"))
-    default_btn.set_click_callback(self._select_default)
-    folder_buttons.append(default_btn)
 
     for folder in sorted(folders.keys(), key=lambda f: max((bundle.index for bundle in folders[f]), default=-1), reverse=True):
       if folder.lower() in ["release models", "master models", "favorites"]:
         btn = BigButton(folder.lower())
-        btn.set_click_callback(lambda f=folder: self._select_folder(f))
+        btn.set_click_callback(lambda f=folder: self._select_folder(f, uncached_only=True))
         if folder.lower() == "favorites":
           folder_buttons.insert(0, btn)
         else:
@@ -120,11 +144,11 @@ class ModelsLayoutMici(NavScroller):
     ui_state.params.remove("ModelManager_ActiveBundle")
     self._reset_main_view()
 
-  def _select_folder(self, folder_name):
+  def _select_folder(self, folder_name, uncached_only=False):
     favs = ui_state.params.get("ModelManager_Favs")
     favorites = set(favs.split(';')) if favs else set()
 
-    folders = self._get_grouped_bundles(favorites)
+    folders = self._get_grouped_bundles(favorites, uncached_only=uncached_only)
     bundles = sorted(folders.get(folder_name, []), key=lambda b: b.index, reverse=True)
 
     btns = []
@@ -133,7 +157,7 @@ class ModelsLayoutMici(NavScroller):
       btn = BigButton(txt)
       btn.set_click_callback(lambda b=bundle: self._select_model(b))
       btns.append(btn)
-    self._show_selection_view(btns, self._show_folders)
+    self._show_selection_view(btns, self._show_download_models)
 
   def _reset_main_view(self):
     self._scroller._items = self.main_items
@@ -150,7 +174,8 @@ class ModelsLayoutMici(NavScroller):
   def _update_state(self):
     super()._update_state()
 
-    self.select_model_btn.set_enabled(ui_state.is_offroad())
+    self.cached_models_btn.set_enabled(ui_state.is_offroad())
+    self.download_models_btn.set_enabled(ui_state.is_offroad())
     self.cancel_download_btn.set_visible(False)
     self.current_model_info.current_model_header.set_effect(TextEffect.NONE)
     self.current_model_info.info_header.set_effect(TextEffect.NONE)
