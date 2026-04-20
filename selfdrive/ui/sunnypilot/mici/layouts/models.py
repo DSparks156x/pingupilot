@@ -5,12 +5,14 @@ This file is part of sunnypilot and is licensed under the MIT License.
 See the LICENSE.md file in the root directory for more details.
 """
 from collections.abc import Callable
+import os
 import pyray as rl
 
 from cereal import custom
 from openpilot.selfdrive.ui.mici.widgets.button import BigButton
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.models import ModelsLayout
 from openpilot.selfdrive.ui.ui_state import ui_state, device
+from openpilot.sunnypilot.models.runners.constants import CUSTOM_MODEL_PATH
 from openpilot.system.ui.lib.application import FontWeight, gui_app
 from openpilot.system.ui.lib.multilang import tr
 from openpilot.system.ui.widgets import Widget
@@ -73,10 +75,21 @@ class ModelsLayoutMici(NavScroller):
   def model_manager(self):
     return ui_state.sm["modelManagerSP"]
 
+  def _is_bundle_cached(self, bundle):
+    for model in bundle.models:
+      artifact_path = os.path.join(CUSTOM_MODEL_PATH, model.artifact.fileName)
+      if not os.path.exists(artifact_path):
+        return False
+      if hasattr(model, 'metadata') and model.metadata.fileName:
+        metadata_path = os.path.join(CUSTOM_MODEL_PATH, model.metadata.fileName)
+        if not os.path.exists(metadata_path):
+          return False
+    return True
+
   def _get_grouped_bundles(self, favorites=None, uncached_only=False):
     bundles = self.model_manager.availableBundles
     if uncached_only:
-      bundles = [b for b in bundles if b.status not in (custom.ModelManagerSP.DownloadStatus.downloaded, custom.ModelManagerSP.DownloadStatus.cached)]
+      bundles = [b for b in bundles if not self._is_bundle_cached(b)]
 
     folders = {}
     for bundle in bundles:
@@ -86,7 +99,7 @@ class ModelsLayoutMici(NavScroller):
     if favorites:
       fav_bundles = [bundle for bundle in self.model_manager.availableBundles if bundle.ref in favorites]
       if uncached_only:
-        fav_bundles = [b for b in fav_bundles if b.status not in (custom.ModelManagerSP.DownloadStatus.downloaded, custom.ModelManagerSP.DownloadStatus.cached)]
+        fav_bundles = [b for b in fav_bundles if not self._is_bundle_cached(b)]
 
       if fav_bundles:
         folders["favorites"] = fav_bundles
@@ -102,7 +115,7 @@ class ModelsLayoutMici(NavScroller):
 
   def _show_cached_models(self):
     self.focused_widget = self.cached_models_btn
-    bundles = [b for b in self.model_manager.availableBundles if b.status in (custom.ModelManagerSP.DownloadStatus.downloaded, custom.ModelManagerSP.DownloadStatus.cached)]
+    bundles = [b for b in self.model_manager.availableBundles if self._is_bundle_cached(b)]
     bundles.sort(key=lambda b: b.index, reverse=True)
 
     btns = []
