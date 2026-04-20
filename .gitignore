@@ -96,5 +96,9 @@ SKILL.md
 !.idea/tools/*
 !.run/*
 
+### ClankerRefs ###
+refs/
+.agents/
+
 ### CLanker ###
 refs/
