@@ -110,7 +110,9 @@ class NetworkLayoutMici(NavScroller):
     self._roaming_btn.set_visible(show_cell_settings)
     self._apn_btn.set_visible(show_cell_settings)
     self._cellular_metered_btn.set_visible(show_cell_settings)
-    self._esim_btn.set_visible(show_cell_settings)
+
+    # Hide on unsupported devices, show on tici/mici regardless of prime sub
+    self._esim_btn.set_visible(HARDWARE.get_device_type() in ("tici", "pc", "mici"))
 
     # Hide on unsupported devices, show on tici/mici regardless of prime sub
     self._esim_btn.set_visible(HARDWARE.get_device_type() in ("tici", "pc", "mici"))
