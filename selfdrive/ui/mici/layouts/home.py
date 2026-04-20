@@ -177,7 +177,7 @@ class MiciHomeLayout(Widget):
     self._openpilot_label = UnifiedLabel("pingupilot", font_size=96, font_weight=FontWeight.DISPLAY, max_width=480, wrap_text=False)
     self._branch_label = UnifiedLabel("", font_size=36, text_color=rl.WHITE, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
     self._date_label = UnifiedLabel("", font_size=36, text_color=rl.GRAY, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
-    self._version_commit_label = UnifiedLabel("", font_size=36, text_color=rl.GRAY, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
+    self._version_commit_label = UnifiedLabel("", font_size=36, text_color=rl.WHITE, font_weight=FontWeight.ROMAN, max_width=480, wrap_text=False)
     self._version_description_label = UnifiedLabel("", font_size=36, text_color=rl.GRAY, font_weight=FontWeight.ROMAN, scroll=True)
 
   def show_event(self):
@@ -263,10 +263,10 @@ class MiciHomeLayout(Widget):
       branch, date_str, commit_hash, description = self._version_info
       # release branch
       release_branch = branch in RELEASE_BRANCHES
-      
+
       # Line 2: Branch (White) + Date (Gray)
       line2_y = text_pos.y + self._openpilot_label.font_size + 16
-      
+
       self._branch_label.set_text("release" if release_branch else branch)
       self._branch_label.set_position(text_pos.x, line2_y)
       self._branch_label.render()
@@ -278,7 +278,7 @@ class MiciHomeLayout(Widget):
       # Line 3: Hash (Static, Gray) + Title (Scrolling, Gray)
       if not release_branch:
         line3_y = line2_y + self._branch_label.font_size + 8
-        hash_text = f"{commit_hash} - "
+        hash_text = f"{commit_hash} "
         self._version_commit_label.set_text(hash_text)
         self._version_commit_label.set_position(text_pos.x, line3_y)
         self._version_commit_label.render()
