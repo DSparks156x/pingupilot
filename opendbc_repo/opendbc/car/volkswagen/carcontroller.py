@@ -71,12 +71,13 @@ class CarController(CarControllerBase):
       apply_torque = 0
       if CC.latActive:
         new_torque = int(round(actuators.torque * self.CCP.STEER_MAX))
-        apply_torque = apply_driver_steer_torque_limits(new_torque, self.apply_torque_last, CS.out.steeringTorque, self.CCP)
 
         # Apply virtual centering force: bias toward center, clipped so OP retains full ±STEER_MAX authority
         if self.use_virtual_centering:
           centering_bias = self.virtual_centering.compute(CS.out.steeringAngleDeg, CS.out.vEgo)
-          apply_torque = int(np.clip(apply_torque + centering_bias, -self.CCP.STEER_MAX, self.CCP.STEER_MAX))
+          new_torque = int(np.clip(new_torque + centering_bias, -self.CCP.STEER_MAX, self.CCP.STEER_MAX))
+
+        apply_torque = apply_driver_steer_torque_limits(new_torque, self.apply_torque_last, CS.out.steeringTorque, self.CCP)
 
       apply_torque = self.hca_mitigation.update(apply_torque, self.apply_torque_last)
       hca_enabled = apply_torque != 0
