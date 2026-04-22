@@ -42,7 +42,7 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     platform = None
     bundle = ui_state.params.get("CarPlatformBundle")
     if bundle:
-      platform = bundle.get("name")
+      platform = bundle.get("platform")
     elif ui_state.CP is not None:
       platform = ui_state.CP.carFingerprint
 
