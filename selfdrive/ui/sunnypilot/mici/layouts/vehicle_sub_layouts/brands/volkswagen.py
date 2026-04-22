@@ -42,7 +42,7 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     platform = None
     bundle = ui_state.params.get("CarPlatformBundle")
     if bundle:
-      platform = bundle.get("platform")
+      platform = bundle.get("name")
     elif ui_state.CP is not None:
       platform = ui_state.CP.carFingerprint
 
@@ -58,14 +58,14 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     if bundle and platform in VW_CAR.__members__:
       config = VW_CAR[platform].config
       is_pq = bool(config.flags & VolkswagenFlags.PQ)
-      is_long_available = is_pq and not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
+      is_long_available = not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
     elif ui_state.CP is not None:
       is_pq = bool(ui_state.CP.flags & VolkswagenFlags.PQ)
       is_long_available = ui_state.CP.alphaLongitudinalAvailable and not (ui_state.CP.flags & VolkswagenFlags.PQ_CC_ONLY)
     elif platform in VW_CAR.__members__:
       config = VW_CAR[platform].config
       is_pq = bool(config.flags & VolkswagenFlags.PQ)
-      is_long_available = is_pq and not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
+      is_long_available = not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
 
     self.hca_mode.set_visible(is_pq)
     self.hca_delta_rate.set_visible(is_pq)
