@@ -10,6 +10,7 @@ from openpilot.selfdrive.ui.sunnypilot.mici.layouts.vehicle_sub_layouts.brands.h
 from openpilot.selfdrive.ui.sunnypilot.mici.layouts.vehicle_sub_layouts.brands.subaru import SubaruSettingsMici
 from openpilot.selfdrive.ui.sunnypilot.mici.layouts.vehicle_sub_layouts.brands.tesla import TeslaSettingsMici
 from openpilot.selfdrive.ui.sunnypilot.mici.layouts.vehicle_sub_layouts.brands.toyota import ToyotaSettingsMici
+from openpilot.selfdrive.ui.sunnypilot.mici.layouts.vehicle_sub_layouts.brands.volkswagen import VolkswagenSettingsMici
 
 class BrandSettingsFactoryMici:
   @staticmethod
@@ -26,5 +27,7 @@ class BrandSettingsFactoryMici:
       return TeslaSettingsMici()
     elif brand == "chrysler" or brand == "jeep" or brand == "dodge" or brand == "ram":
       return ChryslerSettingsMici()
+    elif brand in ("volkswagen", "audi", "skoda", "škoda", "seat", "cupra", "man", "porsche"):
+      return VolkswagenSettingsMici()
 
     return BrandSettingsMici()
