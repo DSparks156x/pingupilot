@@ -65,10 +65,13 @@ class ModelsLayoutMici(NavScroller):
     self.download_models_btn = BigButton(tr("download models"))
     self.download_models_btn.set_click_callback(self._show_download_models)
 
+    self.default_btn = BigButton(tr("default model"))
+    self.default_btn.set_click_callback(self._select_default)
+
     self.cancel_download_btn = BigButton(tr("cancel download"))
     self.cancel_download_btn.set_click_callback(lambda: ui_state.params.remove("ModelManager_DownloadIndex"))
 
-    self.main_items = [self.current_model_info, self.cached_models_btn, self.download_models_btn, self.cancel_download_btn]
+    self.main_items = [self.current_model_info, self.cached_models_btn, self.download_models_btn, self.default_btn, self.cancel_download_btn]
     self._scroller.add_widgets(self.main_items)
 
   @property
@@ -186,6 +189,7 @@ class ModelsLayoutMici(NavScroller):
 
     self.cached_models_btn.set_enabled(ui_state.is_offroad())
     self.download_models_btn.set_enabled(ui_state.is_offroad())
+    self.default_btn.set_enabled(ui_state.is_offroad())
     self.cancel_download_btn.set_visible(False)
     self.current_model_info.current_model_header.set_effect(TextEffect.NONE)
     self.current_model_info.info_header.set_effect(TextEffect.NONE)
