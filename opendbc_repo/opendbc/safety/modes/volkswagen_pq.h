@@ -118,16 +118,16 @@ static void volkswagen_pq_rx_hook(const CANPacket_t *msg) {
       update_sample(&torque_driver, torque_driver_new);
     }
 
-    if (volkswagen_longitudinal) {
-      if (msg->addr == MSG_MOTOR_5) {
-        // ACC main switch on is a prerequisite to enter controls, exit controls immediately on main switch off
-        // Signal: Motor_5.MO5_GRA_Hauptsch
-        acc_main_on = GET_BIT(msg, 50U);
-        if (!acc_main_on) {
-          controls_allowed = false;
-        }
+    if (msg->addr == MSG_MOTOR_5) {
+      // ACC main switch on is a prerequisite to enter controls, exit controls immediately on main switch off
+      // Signal: Motor_5.MO5_GRA_Hauptsch
+      acc_main_on = GET_BIT(msg, 50U);
+      if (!acc_main_on) {
+        controls_allowed = false;
       }
+    }
 
+    if (volkswagen_longitudinal) {
       if (msg->addr == MSG_GRA_NEU) {
         // If ACC main switch is on, enter controls on falling edge of Set or Resume
         // Signal: GRA_Neu.GRA_Neu_Setzen
@@ -204,7 +204,7 @@ static bool volkswagen_pq_tx_hook(const CANPacket_t *msg) {
     bool steer_req = ((hca_status == 5U) || (hca_status == 7U));
 
     if (steer_torque_cmd_checks(desired_torque, steer_req, VOLKSWAGEN_PQ_STEERING_LIMITS)) {
-      tx = false;
+      tx = true;
     }
   }
 
@@ -215,7 +215,7 @@ static bool volkswagen_pq_tx_hook(const CANPacket_t *msg) {
     int desired_accel = ((((msg->data[4] & 0x7U) << 8) | msg->data[3]) * 5U) - 7220U;
 
     if (longitudinal_accel_checks(desired_accel, VOLKSWAGEN_PQ_LONG_LIMITS)) {
-      tx = false;
+      tx = true;
     }
   }
 
