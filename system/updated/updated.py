@@ -128,7 +128,7 @@ def init_overlay() -> None:
   # Re-create the overlay if BASEDIR/.git has changed since we created the overlay
   if OVERLAY_INIT.is_file() and os.path.ismount(OVERLAY_MERGED):
     git_dir_path = os.path.join(BASEDIR, ".git")
-    new_files = run(["find", git_dir_path, "-newer", str(OVERLAY_INIT)])
+    new_files = run(["find", git_dir_path, "-not", "-name", "index", "-newer", str(OVERLAY_INIT)])
     if not len(new_files.splitlines()):
       # A valid overlay already exists
       return
@@ -222,6 +222,7 @@ class Updater:
     self.params = Params()
     self.branches = defaultdict(str)
     self._has_internet: bool = False
+    self._build_metadata = get_build_metadata()
 
   @property
   def has_internet(self) -> bool:
@@ -315,7 +316,7 @@ class Updater:
 
     dt_uptime_onroad = (self.params.get("UptimeOnroad", return_default=True) - last_uptime_onroad) / (60*60)
     dt_route_count = self.params.get("RouteCount", return_default=True) - last_route_count
-    build_metadata = get_build_metadata()
+    build_metadata = self._build_metadata
     if failed_count > 15 and exception is not None and self.has_internet:
       if build_metadata.tested_channel:
         extra_text = "Ensure the software is correctly installed. Uninstall and re-install if this error persists."
