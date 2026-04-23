@@ -352,6 +352,11 @@ struct CarParamsSP @0x80ae746ee2596b11 {
   intelligentCruiseButtonManagementAvailable @4 :Bool;
   enableGasInterceptor @5 :Bool;
 
+  # Volkswagen HCA (Helfende Hände / Lane Assist) settings
+  volkswagenHCAMode @6 :UInt8;         # HCA message type: 5=HCA5, 7=HCA7, 7+centering=HCA7_CENTERING
+  volkswagenHCADeltaRate @7 :UInt8;    # Steer delta rate in HCA counts/frame
+  volkswagenHCACentering @8 :Bool;     # Enable virtual centering force for HCA7
+
   neuralNetworkLateralControl @2 :NeuralNetworkLateralControl;
 
   struct NeuralNetworkLateralControl {
