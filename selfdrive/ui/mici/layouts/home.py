@@ -286,7 +286,8 @@ class MiciHomeLayout(Widget):
         self._version_commit_label.render()
 
         desc_x = text_pos.x + self._version_commit_label.text_width
-        self._version_description_label.set_max_width(self.rect.width - desc_x - HOME_PADDING)
+        relative_desc_x = desc_x - self.rect.x
+        self._version_description_label.set_max_width(self.rect.width - relative_desc_x - HOME_PADDING)
         self._version_description_label.set_text(description)
         self._version_description_label.set_position(desc_x, line3_y)
         self._version_description_label.render()
