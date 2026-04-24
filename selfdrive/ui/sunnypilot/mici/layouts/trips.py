@@ -4,6 +4,7 @@ Copyright (c) 2021-, Haibin Wen, sunnypilot, and a number of other contributors.
 This file is part of sunnypilot and is licensed under the MIT License.
 See the LICENSE.md file in the root directory for more details.
 """
+from collections.abc import Callable
 import requests
 import threading
 import time
@@ -26,8 +27,10 @@ UPDATE_INTERVAL = 30
 class TripsLayoutMici(NavScroller):
   PARAM_KEY = "ApiCache_DriveStats"
 
-  def __init__(self):
+  def __init__(self, back_callback: Callable[[], None] | None = None):
     super().__init__()
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
 
     self._params = Params()
     self._session = requests.Session()

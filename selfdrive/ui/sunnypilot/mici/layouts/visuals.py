@@ -6,6 +6,8 @@ See the LICENSE.md file in the root directory for more details.
 """
 
 
+from collections.abc import Callable
+
 from openpilot.selfdrive.ui.mici.widgets.button import BigParamControl
 from openpilot.selfdrive.ui.sunnypilot.mici.widgets.button import BigMultiParamToggleSP
 from openpilot.selfdrive.ui.ui_state import ui_state
@@ -29,8 +31,10 @@ TOGGLE_PARAMS = [
 
 
 class VisualsLayoutMici(NavScroller):
-  def __init__(self):
+  def __init__(self, back_callback: Callable[[], None] | None = None):
     super().__init__()
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
 
     self._prev_has_long: bool | None = None
     self._toggles: dict[str, BigParamControl] = {}

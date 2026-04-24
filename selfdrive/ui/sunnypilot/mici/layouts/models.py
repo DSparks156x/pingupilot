@@ -48,9 +48,10 @@ class CurrentModelInfo(Widget):
     self.info_text.render()
 
 class ModelsLayoutMici(NavScroller):
-  def __init__(self, back_callback: Callable):
+  def __init__(self, back_callback: Callable[[], None] | None = None):
     super().__init__()
-    self.set_back_callback(back_callback)
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
     self.original_back_callback = back_callback
     self.focused_widget = None
 

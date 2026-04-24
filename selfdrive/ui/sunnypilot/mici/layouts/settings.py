@@ -74,7 +74,7 @@ class SettingsLayoutSP(OP.SettingsLayout):
     sp_buttons = []
     for label, panel_cls, icon in panels:
       # use back_callback=gui_app.pop_widget to allow popping the widget from the stack
-      panel = panel_cls(back_callback=gui_app.pop_widget) if label in [tr("sunnylink"), tr("models"), tr("vehicle")] else panel_cls()
+      panel = panel_cls(back_callback=gui_app.pop_widget)
       btn = SettingsBigButton(label, "", icon)
       btn.set_click_callback(lambda p=panel: gui_app.push_widget(p))
       sp_buttons.append(btn)

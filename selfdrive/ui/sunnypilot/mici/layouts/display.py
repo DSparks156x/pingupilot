@@ -6,6 +6,8 @@ See the LICENSE.md file in the root directory for more details.
 """
 
 
+from collections.abc import Callable
+
 from openpilot.selfdrive.ui.sunnypilot.mici.widgets.button import BigParamOption
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.display import ONROAD_BRIGHTNESS_TIMER_VALUES, OnroadBrightness
 from openpilot.selfdrive.ui.ui_state import ui_state
@@ -59,8 +61,10 @@ def _timeout_label(val):
 
 
 class DisplayLayoutMici(NavScroller):
-  def __init__(self):
+  def __init__(self, back_callback: Callable[[], None] | None = None):
     super().__init__()
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
 
     self._brightness = BigParamOption(
       tr("brightness"), "OnroadScreenOffBrightness",

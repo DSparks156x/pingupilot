@@ -54,9 +54,10 @@ class SunnylinkInfo(Widget):
     self.sponsor_text.render()
 
 class SunnylinkLayoutMici(NavScroller):
-  def __init__(self, back_callback: Callable):
+  def __init__(self, back_callback: Callable[[], None] | None = None):
     super().__init__()
-    self.set_back_callback(back_callback)
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
     self._restore_in_progress = False
     self._backup_in_progress = False
     self._sunnylink_enabled = ui_state.params.get("SunnylinkEnabled")

@@ -39,10 +39,12 @@ class BigDialog(BigDialogBase):
 
 class BigConfirmationDialog(BigDialogBase):
   def __init__(self, title: str, icon: rl.Texture, confirm_callback: Callable[[], None],
+               cancel_callback: Callable[[], None] | None = None,
                exit_on_confirm: bool = True, red: bool = False):
     super().__init__()
     self._confirm_callback = confirm_callback
     self._exit_on_confirm = exit_on_confirm
+    self.set_back_callback(cancel_callback)
 
     self._slider: BigSlider | RedBigSlider
     if red:

@@ -5,6 +5,8 @@ This file is part of sunnypilot and is licensed under the MIT License.
 See the LICENSE.md file in the root directory for more details.
 """
 
+from collections.abc import Callable
+
 from openpilot.selfdrive.ui.mici.widgets.button import BigParamControl
 from openpilot.selfdrive.ui.sunnypilot.mici.widgets.button import (
   BigButtonSP,
@@ -49,8 +51,10 @@ class CruiseLayoutMici(NavScroller):
     - has_icbm is computed from toggle state directly to avoid 5s update_params delay
   """
 
-  def __init__(self):
+  def __init__(self, back_callback: Callable[[], None] | None = None):
     super().__init__()
+    if back_callback is not None:
+      self.set_back_callback(back_callback)
 
     self._prev_icbm_available: bool | None = None
     self._prev_has_long_or_icbm: bool | None = None
