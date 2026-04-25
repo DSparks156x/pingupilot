@@ -6,6 +6,7 @@ from openpilot.selfdrive.ui.mici.layouts.settings.network.network_layout import 
 from openpilot.selfdrive.ui.mici.layouts.settings.device import DeviceLayoutMici, PairBigButton
 from openpilot.selfdrive.ui.mici.layouts.settings.developer import DeveloperLayoutMici
 from openpilot.selfdrive.ui.mici.layouts.settings.firehose import FirehoseLayout
+from openpilot.selfdrive.ui.mici.layouts.settings.pingulink import PingulinkLayoutMici
 from openpilot.system.ui.lib.application import gui_app, FontWeight
 
 
@@ -39,11 +40,16 @@ class SettingsLayout(NavScroller):
     firehose_btn = SettingsBigButton("firehose", "", gui_app.texture("icons_mici/settings/firehose.png", 52, 62))
     firehose_btn.set_click_callback(lambda: gui_app.push_widget(firehose_panel))
 
+    pingulink_panel = PingulinkLayoutMici()
+    pingulink_btn = SettingsBigButton("pingulink", "", gui_app.texture("icons_mici/settings.png", 64, 64))
+    pingulink_btn.set_click_callback(lambda: gui_app.push_widget(pingulink_panel))
+
     self._scroller.add_widgets([
       toggles_btn,
       network_btn,
       device_btn,
       PairBigButton(),
+      pingulink_btn,
       #BigDialogButton("manual", "", "icons_mici/settings/manual_icon.png", "Check out the mici user\nmanual at comma.ai/setup"),
       firehose_btn,
       developer_btn,

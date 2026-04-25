@@ -216,6 +216,14 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"SunnylinkEnabled", {PERSISTENT, BOOL, "1"}},
     {"SunnylinkTempFault", {CLEAR_ON_MANAGER_START | CLEAR_ON_OFFROAD_TRANSITION, BOOL, "0"}},
 
+    // --- pingulink params --- //
+    {"PingulinkEnable", {PERSISTENT, BOOL, "0"}},
+    {"PingulinkUrl", {PERSISTENT, STRING}},
+    {"PingulinkToken", {PERSISTENT | DONT_LOG, STRING}},
+    {"PingulinkLastPing", {PERSISTENT, STRING}},
+    {"PingulinkLastPingStatus", {PERSISTENT, STRING}},
+    {"PingulinkPendingCount", {PERSISTENT, STRING}},
+
     // Backup Manager params
     {"BackupManager_CreateBackup", {PERSISTENT, BOOL}},
     {"BackupManager_RestoreVersion", {PERSISTENT, STRING}},

@@ -71,6 +71,9 @@ def use_github_runner(started, params, CP: car.CarParams) -> bool:
 def use_copyparty(started, params, CP: car.CarParams) -> bool:
   return bool(params.get_bool("EnableCopyparty"))
 
+def use_pingulink_uploader(started, params, CP: car.CarParams) -> bool:
+  return bool(params.get_bool("PingulinkEnable"))
+
 def sunnylink_ready_shim(started, params, CP: car.CarParams) -> bool:
   """Shim for sunnylink_ready to match the process manager signature."""
   return sunnylink_ready(params)
@@ -107,6 +110,8 @@ def mapd_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
   return bool(os.path.exists(Paths.mapd_root()))
 
 def custom_uploader_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
+  if params.get_bool("PingulinkEnable"):
+    return False
   if not params.get_bool("OnroadUploads"):
     return only_offroad(started, params, CP)
   return always_run(started, params, CP)
@@ -170,6 +175,7 @@ procs = [
   PythonProcess("tombstoned", "system.tombstoned", always_run, enabled=not PC),
   PythonProcess("updated", "system.updated.updated", only_offroad, enabled=not PC),
   PythonProcess("uploader", "system.loggerd.uploader", uploader_ready),
+  PythonProcess("pingulink_uploader", "system.pingulink.uploader", use_pingulink_uploader),
   PythonProcess("statsd", "system.statsd", always_run),
   PythonProcess("feedbackd", "selfdrive.ui.feedback.feedbackd", only_onroad),
 

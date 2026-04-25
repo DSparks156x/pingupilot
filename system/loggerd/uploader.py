@@ -258,12 +258,13 @@ def main(exit_event: threading.Event | None = None) -> None:
       continue
 
     success = uploader.step(sm['deviceState'].networkType.raw, sm['deviceState'].networkMetered)
-    
+    if params.get_bool("PingulinkEnable"):
+      break
+
     if success is not None:
       params.put_bool_nonblocking("DashcamUploaderIsSyncing", True)
     else:
       params.put_bool_nonblocking("DashcamUploaderIsSyncing", False)
-
     if success is None:
       backoff = 60 if offroad else 5
     elif success:
