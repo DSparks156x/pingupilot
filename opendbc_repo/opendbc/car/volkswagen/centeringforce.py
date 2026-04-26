@@ -19,8 +19,8 @@ class VirtualCenteringForce:
 
   # Steering angle breakpoints (degrees) and base centering force (HCA counts)
   # Non-linear curve: gentle near center, strong mid-range, plateaus at large angles
-  ANGLE_BP = [0.0, 3.0, 10.0, 30.0, 80.0, 150.0]
-  FORCE_BP = [0.0, 2.0, 15.0, 40.0, 55.0,  60.0]
+  ANGLE_BP = [0.0, 3.0, 6.0, 10.0, 30.0, 80.0, 150.0]
+  FORCE_BP = [0.0, 3.0, 7.0, 25.0, 50.0, 60.0,  70.0]
 
   # Speed breakpoints (m/s) and scaling factor (0.0 to 1.0)
   SPEED_BP    = [0.0, 5.0, 15.0, 30.0]
