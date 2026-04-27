@@ -128,7 +128,13 @@ class ModelFetcher:
     Returns None on transport errors. Raises on 404 and other fatal HTTP errors.
     """
     try:
-      response = requests.get(self.MODEL_URL, timeout=10)
+      # Try with SSL verification first
+      try:
+        response = requests.get(self.MODEL_URL, timeout=10)
+      except SSLError as e:
+        cloudlog.warning(f"SSL error while fetching models, retrying without verification: {e}")
+        # Fallback to no verification if SSL fails (common on devices with old CA stores)
+        response = requests.get(self.MODEL_URL, timeout=10, verify=False)
 
       # Explicitly handle 404 differently
       if response.status_code == 404:
@@ -146,7 +152,7 @@ class ModelFetcher:
     except ConnectionError as e:
       cloudlog.warning(f"DNS/connection error while fetching models: {e}")
     except SSLError as e:
-      cloudlog.warning(f"SSL error while fetching models: {e}")
+      cloudlog.warning(f"SSL error while fetching models (even with verify=False): {e}")
     except RequestException as e:
       cloudlog.warning(f"Request transport error while fetching models: {e}")
     except Exception as e:

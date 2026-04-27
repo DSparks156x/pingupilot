@@ -72,7 +72,10 @@ class ModelsLayoutMici(NavScroller):
     self.cancel_download_btn = BigButton(tr("cancel download"))
     self.cancel_download_btn.set_click_callback(lambda: ui_state.params.remove("ModelManager_DownloadIndex"))
 
-    self.main_items = [self.current_model_info, self.cached_models_btn, self.download_models_btn, self.default_btn, self.cancel_download_btn]
+    self.refresh_btn = BigButton(tr("refresh models"))
+    self.refresh_btn.set_click_callback(self._refresh_models)
+
+    self.main_items = [self.current_model_info, self.cached_models_btn, self.download_models_btn, self.default_btn, self.cancel_download_btn, self.refresh_btn]
     self._scroller.add_widgets(self.main_items)
 
   @property
@@ -141,14 +144,19 @@ class ModelsLayoutMici(NavScroller):
     folder_buttons = []
 
     for folder in sorted(folders.keys(), key=lambda f: max((bundle.index for bundle in folders[f]), default=-1), reverse=True):
-      if folder.lower() in ["release models", "master models", "favorites"]:
-        btn = BigButton(folder.lower())
-        btn.set_click_callback(lambda f=folder: self._select_folder(f, uncached_only=True))
-        if folder.lower() == "favorites":
-          folder_buttons.insert(0, btn)
-        else:
-          folder_buttons.append(btn)
+      if not folder:
+        continue
+      btn = BigButton(folder.lower())
+      btn.set_click_callback(lambda f=folder: self._select_folder(f, uncached_only=True))
+      if folder.lower() == "favorites":
+        folder_buttons.insert(0, btn)
+      else:
+        folder_buttons.append(btn)
     self._show_selection_view(folder_buttons, self._reset_main_view)
+
+  def _refresh_models(self):
+    ui_state.params.put("ModelManager_LastSyncTime", "0")
+    self._reset_main_view()
 
   def _select_model(self, bundle):
     ui_state.params.put("ModelManager_DownloadIndex", bundle.index)

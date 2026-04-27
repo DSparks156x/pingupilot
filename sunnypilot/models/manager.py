@@ -53,7 +53,13 @@ class ModelManagerSP:
     self._download_start_times[model.fileName] = time.monotonic()
 
     async with aiohttp.ClientSession() as session:
-      async with session.get(url) as response:
+      try:
+        response = await session.get(url)
+      except aiohttp.ClientConnectorSSLError:
+        cloudlog.warning(f"SSL error during download of {model.fileName}, retrying without verification")
+        response = await session.get(url, ssl=False)
+
+      async with response:
         response.raise_for_status()
         total_size = int(response.headers.get("content-length", 0))
         bytes_downloaded = 0
