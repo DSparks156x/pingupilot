@@ -158,3 +158,4 @@ def _initialize_volkswagen(CP: structs.CarParams, CP_SP: structs.CarParamsSP, pa
     CP_SP.volkswagenHCAMode = VOLKSWAGEN_HCA_MODE_MAP.get(vw_hca_mode, 7)
     CP_SP.volkswagenHCADeltaRate = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate, 10)
     CP_SP.volkswagenHCACentering = (vw_hca_mode == VolkswagenHCAMode.HCA_7_CENTERING)
+    CP_SP.volkswagenHCACenteringFullAuthority = int(params_dict.get("VolkswagenHCACenteringFullAuthority", 0)) == 1

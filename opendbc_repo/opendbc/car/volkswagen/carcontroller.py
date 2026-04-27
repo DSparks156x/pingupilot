@@ -75,7 +75,15 @@ class CarController(CarControllerBase):
         # Apply virtual centering force: bias toward center, clipped so OP retains full ±STEER_MAX authority
         if self.use_virtual_centering:
           centering_bias = self.virtual_centering.compute(CS.out.steeringAngleDeg, CS.out.vEgo)
-          new_torque = int(np.clip(new_torque + centering_bias, -self.CCP.STEER_MAX, self.CCP.STEER_MAX))
+          if self.CP_SP.volkswagenHCACenteringFullAuthority:
+            # Range expansion math: expand OP request range so it hits STEER_MAX even with bias
+            if actuators.torque > 0:
+              new_torque = int(round(actuators.torque * (self.CCP.STEER_MAX - centering_bias) + centering_bias))
+            else:
+              new_torque = int(round(actuators.torque * (self.CCP.STEER_MAX + centering_bias) + centering_bias))
+          else:
+            new_torque = int(np.clip(new_torque + centering_bias, -self.CCP.STEER_MAX, self.CCP.STEER_MAX))
+          new_torque = int(np.clip(new_torque, -self.CCP.STEER_MAX, self.CCP.STEER_MAX))
 
         apply_torque = apply_driver_steer_torque_limits(new_torque, self.apply_torque_last, CS.out.steeringTorque, self.CCP)
 
@@ -138,7 +146,10 @@ class CarController(CarControllerBase):
                                                            cancel=CC.cruiseControl.cancel, resume=CC.cruiseControl.resume))
 
     new_actuators = actuators.as_builder()
-    new_actuators.torque = self.apply_torque_last / self.CCP.STEER_MAX
+    if self.CP_SP.volkswagenHCACenteringFullAuthority and CC.latActive:
+      new_actuators.torque = actuators.torque
+    else:
+      new_actuators.torque = self.apply_torque_last / self.CCP.STEER_MAX
     new_actuators.torqueOutputCan = self.apply_torque_last
 
     self.gra_acc_counter_last = CS.gra_stock_values["COUNTER"]

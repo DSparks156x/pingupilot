@@ -238,6 +238,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"ToyotaStopAndGoHack", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"VolkswagenHCAMode", {PERSISTENT | BACKUP, INT, "1"}},
     {"VolkswagenHCADeltaRate", {PERSISTENT | BACKUP, INT, "1"}},
+    {"VolkswagenHCACenteringFullAuthority", {PERSISTENT | BACKUP, BOOL, "0"}},
 
     {"DynamicExperimentalControl", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"BlindSpot", {PERSISTENT | BACKUP, BOOL, "0"}},

@@ -32,9 +32,15 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       "AlphaLongitudinalEnabled"
     )
 
+    self.hca_centering_full_authority = BigParamControl(
+      tr("HCA Centering Full Authority"),
+      "VolkswagenHCACenteringFullAuthority"
+    )
+
     self.items = [
       self.hca_mode,
       self.hca_delta_rate,
+      self.hca_centering_full_authority,
       self.experimental_long,
     ]
 
@@ -69,4 +75,5 @@ class VolkswagenSettingsMici(BrandSettingsMici):
 
     self.hca_mode.set_visible(is_pq)
     self.hca_delta_rate.set_visible(is_pq)
+    self.hca_centering_full_authority.set_visible(is_pq)
     self.experimental_long.set_visible(is_long_available)
