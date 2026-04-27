@@ -18,7 +18,7 @@ from openpilot.sunnypilot.sunnylink.api import UNREGISTERED_SUNNYLINK_DONGLE_ID
 from openpilot.system.ui.lib.application import gui_app, MousePos, FontWeight
 from openpilot.system.ui.lib.multilang import tr
 from openpilot.system.ui.widgets import Widget
-from openpilot.system.ui.widgets.label import UnifiedLabel
+from openpilot.system.ui.widgets.label import UnifiedLabel, TextEffect
 from openpilot.system.ui.widgets.scroller import NavScroller
 from openpilot.system.version import sunnylink_consent_version, sunnylink_consent_declined
 
@@ -32,12 +32,12 @@ class SunnylinkInfo(Widget):
     subheader_color = rl.Color(255, 255, 255, int(255 * 0.9 * 0.65))
     max_width = int(self._rect.width - 20)
     self.device_id_header = UnifiedLabel(tr("device id"), 48, max_width=max_width, text_color=header_color,
-                                         font_weight=FontWeight.DISPLAY, shimmer=True)
+                                         font_weight=FontWeight.DISPLAY, effect=TextEffect.SHIMMER)
     self.device_id_text = UnifiedLabel(UNREGISTERED_SUNNYLINK_DONGLE_ID, 32, max_width=max_width, text_color=subheader_color,
                                        font_weight=FontWeight.ROMAN, scroll=True)
 
     self.sponsor_header = UnifiedLabel(tr("sponsor tier"), 48, max_width=max_width, text_color=header_color,
-                                       font_weight=FontWeight.DISPLAY, shimmer=True)
+                                       font_weight=FontWeight.DISPLAY, effect=TextEffect.SHIMMER)
     self.sponsor_text = UnifiedLabel("N/A", 32, max_width=max_width, text_color=subheader_color, font_weight=FontWeight.ROMAN)
 
   def _render(self, _):
