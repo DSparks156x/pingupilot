@@ -281,4 +281,16 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"TorqueParamsOverrideEnabled", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"TorqueParamsOverrideFriction", {PERSISTENT | BACKUP, FLOAT, "0.1"}},
     {"TorqueParamsOverrideLatAccelFactor", {PERSISTENT | BACKUP, FLOAT, "2.5"}},
+
+    // Dashcam Uploader
+    {"DashcamUploaderProvider", {PERSISTENT | BACKUP, INT, "0"}},
+    {"DashcamUploaderSyncMode", {PERSISTENT | BACKUP, INT, "1"}},
+    {"DashcamUploaderVideoMode", {PERSISTENT | BACKUP, INT, "0"}},
+    {"DashcamUploaderUploadLogs", {PERSISTENT | BACKUP, BOOL, "0"}},
+    {"DashcamUploaderDeleteSynced", {PERSISTENT | BACKUP, BOOL, "0"}},
+    {"DashcamUploaderIsSyncing", {CLEAR_ON_MANAGER_START, BOOL, "0"}},
+    {"DashcamUploaderGDAuth", {PERSISTENT | BACKUP, STRING}},
+    {"DashcamUploaderGDFolder", {PERSISTENT | BACKUP, STRING}},
+    {"DashcamUploaderRsyncTarget", {PERSISTENT | BACKUP, STRING}},
+    {"DashcamUploaderRsyncKey", {PERSISTENT | BACKUP, STRING}},
 };

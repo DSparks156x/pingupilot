@@ -83,6 +83,18 @@ def use_sunnylink_uploader_shim(started, params, CP: car.CarParams) -> bool:
   """Shim for use_sunnylink_uploader to match the process manager signature."""
   return use_sunnylink_uploader(params)
 
+def use_gdrive(started, params, CP: car.CarParams) -> bool:
+  try:
+    return int(params.get("DashcamUploaderProvider") or 0) == 1
+  except Exception:
+    return False
+
+def use_rsync(started, params, CP: car.CarParams) -> bool:
+  try:
+    return int(params.get("DashcamUploaderProvider") or 0) == 2
+  except Exception:
+    return False
+
 def is_tinygrad_model(started, params, CP: car.CarParams) -> bool:
   """Check if the active model runner is SNPE."""
   return bool(get_active_model_runner(params, not started) == custom.ModelManagerSP.Runner.tinygrad)
@@ -94,11 +106,18 @@ def is_stock_model(started, params, CP: car.CarParams) -> bool:
 def mapd_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
   return bool(os.path.exists(Paths.mapd_root()))
 
-def uploader_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
+def custom_uploader_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
   if not params.get_bool("OnroadUploads"):
     return only_offroad(started, params, CP)
-
   return always_run(started, params, CP)
+
+def uploader_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
+  # Implicitly disable native telemetry uploads if GDrive/Rsync is hoarding logs locally
+  is_provider_active = params.get_bool("DashcamUploaderUploadLogs") and (use_gdrive(started, params, CP) or use_rsync(started, params, CP))
+  if is_provider_active:
+    return False
+
+  return custom_uploader_ready(started, params, CP)
 
 def or_(*fns):
   return lambda *args: operator.or_(*(fn(*args) for fn in fns))
@@ -199,5 +218,8 @@ if os.path.exists("../../third_party/copyparty/copyparty-sfx.py"):
   copyparty_args += ["-z"]
   copyparty_args += ["-q"]
   procs += [NativeProcess("copyparty-sfx", "third_party/copyparty", ["./copyparty-sfx.py", *copyparty_args], and_(only_offroad, use_copyparty))]
+
+procs += [PythonProcess("gdrive_uploader", "system.loggerd.gdrive_uploader", and_(custom_uploader_ready, use_gdrive))]
+procs += [PythonProcess("rsync_uploader", "system.loggerd.rsync_uploader", and_(custom_uploader_ready, use_rsync))]
 
 managed_processes = {p.name: p for p in procs}

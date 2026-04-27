@@ -143,6 +143,34 @@ class CellularIcon(Widget):
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 
 
+class SyncSpinnerIcon(Widget):
+  def __init__(self):
+    super().__init__()
+    self.set_rect(rl.Rectangle(0, 0, 48, 48))
+    self._texture = gui_app.texture("icons_mici/settings/device/update.png", 42, 48)
+    self._angle = 0.0
+
+  def _update_state(self):
+    is_sync = ui_state.params.get_bool("DashcamUploaderIsSyncing")
+    self.set_visible(is_sync)
+    if is_sync:
+      self._angle += 180.0 * (1.0 / gui_app.target_fps)
+      if self._angle >= 360.0:
+        self._angle -= 360.0
+
+  def _render(self, _):
+    color = rl.Color(255, 255, 255, 230)
+    origin = rl.Vector2(self._texture.width / 2, self._texture.height / 2)
+    pos = rl.Vector2(self._rect.x + (self._rect.width / 2), self._rect.y + (self._rect.height / 2))
+    
+    rl.draw_texture_pro(
+      self._texture, 
+      rl.Rectangle(0, 0, self._texture.width, self._texture.height),
+      rl.Rectangle(pos.x, pos.y, self._texture.width, self._texture.height),
+      origin, self._angle, color
+    )
+
+
 
 
 
@@ -167,11 +195,13 @@ class MiciHomeLayout(Widget):
     self._alerts_pill = AlertsPill()
 
     self._cellular_icon = CellularIcon()
+    self._sync_spinner = SyncSpinnerIcon()
 
     self._status_bar_layout = HBoxLayout([
       IconWidget("icons_mici/settings.png", (48, 48), opacity=0.9),
       WifiIcon(),
       self._cellular_icon,
+      self._sync_spinner,
       self._experimental_icon,
       self._mic_icon,
     ], spacing=18)
@@ -195,6 +225,7 @@ class MiciHomeLayout(Widget):
 
   def _update_state(self):
     self._cellular_icon._update_state()
+    self._sync_spinner._update_state()
     
     if self.is_pressed and not self._is_pressed_prev:
       self._mouse_down_t = time.monotonic()
