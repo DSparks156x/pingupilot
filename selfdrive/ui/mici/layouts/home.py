@@ -290,6 +290,7 @@ class MiciHomeLayout(Widget):
     # TODO: why is there extra space here to get it to be flush?
     text_pos = rl.Vector2(self.rect.x - 2 + HOME_PADDING, self.rect.y - 16)
     self._openpilot_label.set_position(text_pos.x, text_pos.y)
+    self._openpilot_label.set_max_width((self.rect.x + self.rect.width) - text_pos.x - HOME_PADDING)
     self._openpilot_label.render()
 
     if self._version_info is not None:
@@ -302,10 +303,13 @@ class MiciHomeLayout(Widget):
 
       self._branch_label.set_text("release" if release_branch else branch)
       self._branch_label.set_position(text_pos.x, line2_y)
+      self._branch_label.set_max_width((self.rect.x + self.rect.width) - text_pos.x - HOME_PADDING)
       self._branch_label.render()
 
+      date_x = text_pos.x + self._branch_label.text_width
       self._date_label.set_text(" " + date_str)
-      self._date_label.set_position(text_pos.x + self._branch_label.text_width, line2_y)
+      self._date_label.set_position(date_x, line2_y)
+      self._date_label.set_max_width((self.rect.x + self.rect.width) - date_x - HOME_PADDING)
       self._date_label.render()
 
       # Line 3: Hash (Static, Gray) + Title (Scrolling, Gray)
@@ -314,10 +318,11 @@ class MiciHomeLayout(Widget):
         hash_text = f"{commit_hash} "
         self._version_commit_label.set_text(hash_text)
         self._version_commit_label.set_position(text_pos.x, line3_y)
+        self._version_commit_label.set_max_width((self.rect.x + self.rect.width) - text_pos.x - HOME_PADDING)
         self._version_commit_label.render()
 
         desc_x = text_pos.x + self._version_commit_label.text_width
-        self._version_description_label.set_max_width(self.rect.width - desc_x - HOME_PADDING)
+        self._version_description_label.set_max_width((self.rect.x + self.rect.width) - desc_x - HOME_PADDING)
         self._version_description_label.set_text(description)
         self._version_description_label.set_position(desc_x, line3_y)
         self._version_description_label.render()
