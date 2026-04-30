@@ -53,6 +53,7 @@ class BrakeHold:
     self.brake_hold_decel = DEFAULT_BRAKE_HOLD_DECEL
     self.last_das_3_counter = 0
     self.last_sent_das_3_counter = -1
+    self.spoofed_counter = -1
 
   def update_state(self, CS, acc_decelerating: bool, acc_accelerating: bool,
                    das_3_counter: int, das_3_acc_decel: float) -> bool:
@@ -61,6 +62,10 @@ class BrakeHold:
     so the state is stable before any consumers (CarController, selfdrived)
     read it. Returns the current active flag.
     """
+    if das_3_counter == self.spoofed_counter:
+      # Ignore our own spoofed messages looped back from the CAN bus
+      return self.active
+
     self.last_das_3_counter = das_3_counter
 
     if not self.enabled_by_param:
@@ -90,6 +95,7 @@ class BrakeHold:
       if driver_override or not in_drive or not standstill or not acc_available or acc_accelerating:
         self.active = False
         self.brake_hold_decel = DEFAULT_BRAKE_HOLD_DECEL
+        self.spoofed_counter = -1
     else:
       # Activation: ACC active, not accelerating, at standstill, in Drive, no driver input.
       # The strict decel requirement is removed since the PID can taper off request right at 0mph.
@@ -123,6 +129,7 @@ class BrakeHold:
     # The car accepts whichever of the two consecutive counters arrives first.
     offset = 3 if self.CP_SP.flags & ChryslerFlagsSP.BRAKE_HOLD_OFFSET_3 else 2
     counter = (self.last_das_3_counter + offset) % 16
+    self.spoofed_counter = counter
 
     values = {
       "COUNTER": counter,
