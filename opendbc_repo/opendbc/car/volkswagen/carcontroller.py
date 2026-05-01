@@ -7,6 +7,7 @@ from opendbc.car.interfaces import CarControllerBase
 from opendbc.car.volkswagen import mlbcan, mqbcan, pqcan
 from opendbc.car.volkswagen.centeringforce import VirtualCenteringForce
 from opendbc.car.volkswagen.values import CanBus, CarControllerParams, VolkswagenFlags
+from openpilot.common.params import Params
 
 VisualAlert = structs.CarControl.HUDControl.VisualAlert
 LongCtrlState = structs.CarControl.Actuators.LongControlState
@@ -60,10 +61,24 @@ class CarController(CarControllerBase):
     if self.use_virtual_centering:
       self.virtual_centering = VirtualCenteringForce()
 
+    self.params = Params()
+    self.lat_active_prev = False
+
   def update(self, CC, CC_SP, CS, now_nanos):
     actuators = CC.actuators
     hud_control = CC.hudControl
     can_sends = []
+
+    if CC.latActive and not self.lat_active_prev:
+      try:
+        from opendbc.sunnypilot.car.volkswagen.values import VOLKSWAGEN_HCA_DELTA_RATE_MAP
+        vw_hca_delta_rate = int(self.params.get("VolkswagenHCADeltaRate", encoding="utf8") or 1)
+        new_rate = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate, 10)
+        self.CCP.STEER_DELTA_UP = new_rate
+        self.CCP.STEER_DELTA_DOWN = new_rate
+      except ValueError:
+        pass
+    self.lat_active_prev = CC.latActive
 
     # **** Steering Controls ************************************************ #
 

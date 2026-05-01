@@ -62,7 +62,20 @@ class Controls(ControlsExt):
     elif self.CP.lateralTuning.which() == 'pid':
       self.LaC = LatControlPID(self.CP, self.CP_SP, self.CI, DT_CTRL)
     elif self.CP.lateralTuning.which() == 'torque':
-      self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
+      is_vw_alt = False
+      if self.CP.carFingerprint.startswith("VOLKSWAGEN"):
+        try:
+          hca_mode = int(self.params.get("VolkswagenHCAMode", encoding="utf8") or 0)
+          if hca_mode == 3:
+            is_vw_alt = True
+        except ValueError:
+          pass
+
+      if is_vw_alt:
+        from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
+        self.LaC = LatControlTorqueAlt(self.CP, self.CP_SP, self.CI, DT_CTRL)
+      else:
+        self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
 
     self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
 
@@ -126,6 +139,26 @@ class Controls(ControlsExt):
 
     if not CC.latActive:
       self.LaC.reset()
+
+      # Dynamically swap between standard and Alt controllers when disengaged (no reboot required)
+      if self.CP.carFingerprint.startswith("VOLKSWAGEN"):
+        try:
+          hca_mode = int(self.params.get("VolkswagenHCAMode", encoding="utf8") or 0)
+          is_vw_alt_selected = (hca_mode == 3)
+          
+          # We need to import locally to check type
+          from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
+          is_vw_alt_active = isinstance(self.LaC, LatControlTorqueAlt)
+          
+          if is_vw_alt_selected and not is_vw_alt_active:
+            self.LaC = LatControlTorqueAlt(self.CP, self.CP_SP, self.CI, DT_CTRL)
+            self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
+          elif not is_vw_alt_selected and is_vw_alt_active:
+            self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
+            self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
+        except ValueError:
+          pass
+
     if not CC.longActive:
       self.LoC.reset()
 
