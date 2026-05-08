@@ -190,11 +190,6 @@ static safety_config chrysler_init(uint16_t param) {
     {CHRYSLER_LKAS_COMMAND, 0, 6, .check_relay = true},
     {CHRYSLER_DAS_6, 0, 8, .check_relay = true},
     {CHRYSLER_LKAS_HEARTBIT, 0, 5, .check_relay = true},
-    // DAS_3 TX for Jeep Brake Hold. Only enabled at a higher layer when the
-    // user opts in via the JeepBrakeHold param and the vehicle is a Jeep at
-    // standstill. The safety model remains unchanged — controls_allowed /
-    // steering torque / cruise-button semantics all behave as before.
-    {CHRYSLER_DAS_3, 0, 8, .check_relay = false},
   };
 
   static const CanMsg CHRYSLER_RAM_DT_TX_MSGS[] = {

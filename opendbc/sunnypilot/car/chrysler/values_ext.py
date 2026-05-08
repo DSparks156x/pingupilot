@@ -9,7 +9,6 @@ from collections import namedtuple
 from enum import IntFlag
 
 from opendbc.car import structs
-from opendbc.car.chrysler.values import CAR
 
 ButtonType = structs.CarState.ButtonEvent.Type
 Button = namedtuple('Button', ['event_type', 'can_addr', 'can_msg', 'values'])
@@ -24,10 +23,3 @@ BUTTONS = [
 
 class ChryslerFlagsSP(IntFlag):
   NO_MIN_STEERING_SPEED = 1
-  BRAKE_HOLD = 2
-  BRAKE_HOLD_OFFSET_3 = 4
-
-
-# Brake hold is a Jeep-only feature (Chrysler/Dodge/RAM have different SNG behavior).
-# The Cherokee 5th gen (CUSW) has a different CAN stack and is excluded for now.
-JEEPS = {CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019}
