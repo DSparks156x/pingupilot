@@ -95,11 +95,6 @@ class CarController(CarControllerBase, MadsCarController, CarControllerExt, Inte
     # Intelligent Cruise Button Management
     can_sends.extend(IntelligentCruiseButtonManagementInterface.update(self, CS, CC_SP, self.packer, self.frame, self.last_button_frame))
 
-    # Jeep Brake Hold: emits DAS_3 with an assertive decel request when
-    # the state machine in CarStateExt says we're holding at standstill.
-    # CarState owns the activate/deactivate decisions; this only sends CAN.
-    can_sends.extend(CS.brake_hold.send(self.packer, self.frame))
-
     self.frame += 1
 
     new_actuators = CC.actuators.as_builder()
