@@ -65,7 +65,7 @@ class Controls(ControlsExt):
       is_vw_alt = False
       if self.CP.carFingerprint.startswith("VOLKSWAGEN"):
         try:
-          hca_mode = int(self.params.get("VolkswagenHCAMode", encoding="utf8") or 0)
+          hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           if hca_mode == 3:
             is_vw_alt = True
         except ValueError:
@@ -143,7 +143,7 @@ class Controls(ControlsExt):
       # Dynamically swap between standard and Alt controllers when disengaged (no reboot required)
       if self.CP.carFingerprint.startswith("VOLKSWAGEN"):
         try:
-          hca_mode = int(self.params.get("VolkswagenHCAMode", encoding="utf8") or 0)
+          hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           is_vw_alt_selected = (hca_mode == 3)
           
           # We need to import locally to check type

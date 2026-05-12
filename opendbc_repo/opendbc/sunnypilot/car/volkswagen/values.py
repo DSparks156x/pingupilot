@@ -12,6 +12,7 @@ class VolkswagenHCAMode(IntEnum):
   HCA_5 = 0
   HCA_7 = 1
   HCA_7_CENTERING = 2
+  HCA_7_ALT = 3
 
 
 class VolkswagenHCADeltaRate(IntEnum):
@@ -25,6 +26,7 @@ VOLKSWAGEN_HCA_MODE_MAP = {
   VolkswagenHCAMode.HCA_5: 5,
   VolkswagenHCAMode.HCA_7: 7,
   VolkswagenHCAMode.HCA_7_CENTERING: 7,
+  VolkswagenHCAMode.HCA_7_ALT: 7,
 }
 
 VOLKSWAGEN_HCA_DELTA_RATE_MAP = {
@@ -33,3 +35,10 @@ VOLKSWAGEN_HCA_DELTA_RATE_MAP = {
   VolkswagenHCADeltaRate.RATE_30: 30,
   VolkswagenHCADeltaRate.RATE_50: 50,
 }
+
+VOLKSWAGEN_HCA_LAT_JERK_FACTOR_STEPS = [
+  0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
+  1.1, 1.2, 1.3, 1.4, 1.5
+]
+
+VOLKSWAGEN_HCA_LAT_ACCEL_FACTOR_STEPS = [round(1.0 + i * 0.1, 1) for i in range(31)]

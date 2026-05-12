@@ -72,7 +72,7 @@ class CarController(CarControllerBase):
     if CC.latActive and not self.lat_active_prev:
       try:
         from opendbc.sunnypilot.car.volkswagen.values import VOLKSWAGEN_HCA_DELTA_RATE_MAP
-        vw_hca_delta_rate = int(self.params.get("VolkswagenHCADeltaRate", encoding="utf8") or 1)
+        vw_hca_delta_rate = int(self.params.get("VolkswagenHCADeltaRate") or 1)
         new_rate = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate, 10)
         self.CCP.STEER_DELTA_UP = new_rate
         self.CCP.STEER_DELTA_DOWN = new_rate
