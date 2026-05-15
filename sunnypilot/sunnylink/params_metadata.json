@@ -1142,6 +1142,10 @@
     "title": "UI Debug Mode",
     "description": ""
   },
+  "ShowTamagotchi": {
+    "title": "Display Pingu Tamagotchi",
+    "description": "When enabled, a little Pingu will be displayed on the driving screen."
+  },
   "ShowTurnSignals": {
     "title": "[TIZI/TICI only] Display Turn Signals",
     "description": "When enabled, visual turn indicators are drawn on the HUD."

@@ -87,6 +87,11 @@ class VisualsLayout(Widget):
         tr("When enabled, visual turn indicators are drawn on the HUD."),
         None,
       ),
+      "ShowTamagotchi": (
+        lambda: tr("Display Tamagotchi"),
+        tr("When enabled, a little Pingu will be displayed on the driving screen."),
+        None,
+      ),
       "RocketFuel": (
         lambda: tr("Real-time Acceleration Bar"),
         tr("Show an indicator on the left side of the screen to display real-time vehicle acceleration and deceleration. " +

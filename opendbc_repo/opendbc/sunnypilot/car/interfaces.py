@@ -14,6 +14,7 @@ from opendbc.car.can_definitions import CanRecvCallable, CanSendCallable
 from opendbc.car.hyundai.values import HyundaiFlags
 from opendbc.car.subaru.values import SubaruFlags
 from opendbc.car.toyota.values import ToyotaSafetyFlags
+from opendbc.sunnypilot.car.chrysler.values_ext import ChryslerFlagsSP, JEEPS
 from opendbc.sunnypilot.car.hyundai.enable_radar_tracks import enable_radar_tracks as hyundai_enable_radar_tracks
 from opendbc.sunnypilot.car.hyundai.longitudinal.helpers import LongitudinalTuningType
 from opendbc.sunnypilot.car.hyundai.values import HyundaiFlagsSP
@@ -88,6 +89,7 @@ def setup_interfaces(CI, CP: structs.CarParams, CP_SP: structs.CarParamsSP,
   _initialize_coop_steering(CP, CP_SP, params_dict)
   _initialize_radar_tracks(CP, CP_SP, can_recv, can_send)
   _initialize_stop_and_go(CP, CP_SP, params_dict)
+  _initialize_jeep_brake_hold(CP, CP_SP, params_dict)
   _initialize_toyota(CP, CP_SP, params_dict)
   _initialize_volkswagen(CP, CP_SP, params_dict)
 
@@ -133,6 +135,21 @@ def _initialize_stop_and_go(CP: structs.CarParams, CP_SP: structs.CarParamsSP, p
       CP_SP.flags |= SubaruFlagsSP.STOP_AND_GO_MANUAL_PARKING_BRAKE.value
     if stop_and_go or stop_and_go_manual_parking_brake:
       CP_SP.safetyParam |= SubaruSafetyFlagsSP.STOP_AND_GO
+
+
+def _initialize_jeep_brake_hold(CP: structs.CarParams, CP_SP: structs.CarParamsSP, params_dict: dict[str, str]) -> None:
+  # Gated strictly to supported Jeep platforms. JEEP_CHEROKEE_5TH_GEN (CUSW)
+  # uses a different CAN stack and isn't covered by this implementation.
+  if CP.brand == 'chrysler' and CP.carFingerprint in JEEPS:
+    try:
+      jeep_brake_hold = int(params_dict.get("JeepBrakeHold", 0))
+    except (ValueError, TypeError):
+      jeep_brake_hold = 0
+
+    if jeep_brake_hold > 0:
+      CP_SP.flags |= ChryslerFlagsSP.BRAKE_HOLD.value
+      if jeep_brake_hold == 2:
+        CP_SP.flags |= ChryslerFlagsSP.BRAKE_HOLD_OFFSET_3.value
 
 
 def _initialize_toyota(CP: structs.CarParams, CP_SP: structs.CarParamsSP, params_dict: dict[str, str]) -> None:

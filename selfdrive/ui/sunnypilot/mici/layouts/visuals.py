@@ -26,6 +26,7 @@ TOGGLE_PARAMS = [
   (tr("true speed"), "TrueVEgoUI"),
   (tr("hide speed"), "HideVEgoUI"),
   (tr("turn signals"), "ShowTurnSignals"),
+  (tr("tamagotchi"), "ShowTamagotchi"),
   (tr("accel bar"), "RocketFuel"),
 ]
 

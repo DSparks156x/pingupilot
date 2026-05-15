@@ -8,6 +8,7 @@ See the LICENSE.md file in the root directory for more details.
 from collections import namedtuple
 from enum import IntFlag
 
+from opendbc.car.chrysler.values import CAR
 from opendbc.car import structs
 
 ButtonType = structs.CarState.ButtonEvent.Type
@@ -23,3 +24,10 @@ BUTTONS = [
 
 class ChryslerFlagsSP(IntFlag):
   NO_MIN_STEERING_SPEED = 1
+  BRAKE_HOLD = 2
+  BRAKE_HOLD_OFFSET_3 = 4
+
+
+# Brake hold is a Jeep-only feature (Chrysler/Dodge/RAM have different SNG behavior).
+# The Cherokee 5th gen (CUSW) has a different CAN stack and is excluded for now.
+JEEPS = {CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019}

@@ -111,6 +111,9 @@ class CarInterface(CarInterfaceBase):
       ret.flags |= ChryslerFlagsSP.NO_MIN_STEERING_SPEED.value
       stock_cp.minSteerSpeed = 0.
 
+    if candidate in (CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019):
+      ret.flags |= ChryslerFlagsSP.BRAKE_HOLD.value
+
     ret.intelligentCruiseButtonManagementAvailable = True
 
     return ret

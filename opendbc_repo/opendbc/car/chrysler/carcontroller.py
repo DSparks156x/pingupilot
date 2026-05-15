@@ -10,6 +10,10 @@ from opendbc.sunnypilot.car.chrysler.icbm import IntelligentCruiseButtonManageme
 from opendbc.sunnypilot.car.chrysler.mads import MadsCarController
 from opendbc.sunnypilot.car.chrysler.values_ext import ChryslerFlagsSP
 
+# When the WP mod is detected (NO_MIN_STEERING_SPEED), hold the LKAS control
+# bit high with zero torque for this many frames after each rising edge, so
+# the WP has time to recognize engagement and start spoofing the EPS speed.
+WP_WARMUP_FRAMES = 50  # 0.5s at 100Hz
 
 class CarController(CarControllerBase, MadsCarController, CarControllerExt, IntelligentCruiseButtonManagementInterface):
   def __init__(self, dbc_names, CP, CP_SP):
@@ -21,6 +25,7 @@ class CarController(CarControllerBase, MadsCarController, CarControllerExt, Inte
 
     self.hud_count = 0
     self.last_lkas_falling_edge = 0
+    self.last_lkas_rising_edge = 0
     self.lkas_control_bit_prev = False
     self.last_button_frame = 0
 
@@ -78,6 +83,8 @@ class CarController(CarControllerBase, MadsCarController, CarControllerExt, Inte
 
       if not lkas_control_bit and self.lkas_control_bit_prev:
         self.last_lkas_falling_edge = self.frame
+      if lkas_control_bit and not self.lkas_control_bit_prev:
+        self.last_lkas_rising_edge = self.frame
       self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
@@ -85,6 +92,7 @@ class CarController(CarControllerBase, MadsCarController, CarControllerExt, Inte
       apply_torque = apply_meas_steer_torque_limits(new_torque, self.apply_torque_last, CS.out.steeringTorqueEps, self.params)
       if not lkas_active or not lkas_control_bit:
         apply_torque = 0
+
       self.apply_torque_last = apply_torque
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_torque), lkas_control_bit))
@@ -94,6 +102,11 @@ class CarController(CarControllerBase, MadsCarController, CarControllerExt, Inte
 
     # Intelligent Cruise Button Management
     can_sends.extend(IntelligentCruiseButtonManagementInterface.update(self, CS, CC_SP, self.packer, self.frame, self.last_button_frame))
+
+    # Jeep brake hold: maintain ACC brake request at standstill so the car doesn't
+    # release the brakes and roll. The instance lives on the CarState so the state
+    # machine is updated by CarStateExt before any consumer reads it.
+    can_sends.extend(CS.brake_hold.send(self.packer, self.frame))
 
     self.frame += 1
 

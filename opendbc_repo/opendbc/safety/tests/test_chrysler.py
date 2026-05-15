@@ -9,9 +9,9 @@ from opendbc.safety.tests.common import CANPackerSafety
 
 
 class TestChryslerSafety(common.CarSafetyTest, common.MotorTorqueSteeringSafetyTest):
-  TX_MSGS = [[0x23B, 0], [0x292, 0], [0x2A6, 0], [0x2D9, 0]]
-  RELAY_MALFUNCTION_ADDRS = {0: (0x292, 0x2A6, 0x2D9)}
-  FWD_BLACKLISTED_ADDRS = {2: [0x292, 0x2A6, 0x2D9]}
+  TX_MSGS = [[0x23B, 0], [0x292, 0], [0x2A6, 0], [0x2D9, 0], [0x1F4, 0]]
+  RELAY_MALFUNCTION_ADDRS = {0: (0x292, 0x2A6, 0x2D9, 0x1F4)}
+  FWD_BLACKLISTED_ADDRS = {2: [0x292, 0x2A6, 0x2D9, 0x1F4]}
 
   MAX_RATE_UP = 3
   MAX_RATE_DOWN = 3

@@ -178,6 +178,17 @@ class HudRenderer(Widget):
       self._draw_set_speed(rect)
 
     self._draw_steering_wheel(rect)
+    self._draw_brake_hold(rect)
+
+  def _draw_brake_hold(self, rect: rl.Rectangle) -> None:
+    sm = ui_state.sm
+    if sm and sm.recv_frame.get("carState", 0) >= ui_state.started_frame:
+      if sm['carState'].brakeHoldActive:
+        hold_text = tr("HOLD")
+        font_size = 60
+        hold_text_size = measure_text_cached(self._font_bold, hold_text, font_size)
+        pos = rl.Vector2(rect.x + rect.width / 2 - hold_text_size.x / 2, rect.y + rect.height - 150)
+        rl.draw_text_ex(self._font_bold, hold_text, pos, font_size, 0, rl.GREEN)
 
   def _draw_steering_wheel(self, rect: rl.Rectangle) -> None:
     wheel_txt = self._txt_wheel_critical if self._show_wheel_critical else self._txt_wheel

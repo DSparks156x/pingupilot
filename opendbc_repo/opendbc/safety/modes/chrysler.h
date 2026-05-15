@@ -190,6 +190,7 @@ static safety_config chrysler_init(uint16_t param) {
     {CHRYSLER_LKAS_COMMAND, 0, 6, .check_relay = true},
     {CHRYSLER_DAS_6, 0, 8, .check_relay = true},
     {CHRYSLER_LKAS_HEARTBIT, 0, 5, .check_relay = true},
+    {CHRYSLER_DAS_3, 0, 8, .check_relay = false},
   };
 
   static const CanMsg CHRYSLER_RAM_DT_TX_MSGS[] = {

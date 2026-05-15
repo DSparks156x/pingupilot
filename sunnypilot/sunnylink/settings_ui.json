@@ -1297,6 +1297,12 @@
               "description": "When enabled, visual turn indicators are drawn on the HUD."
             },
             {
+              "key": "ShowTamagotchi",
+              "widget": "toggle",
+              "title": "Display Pingu Tamagotchi",
+              "description": "When enabled, a little Pingu will be displayed on the driving screen."
+            },
+            {
               "key": "RoadNameToggle",
               "widget": "toggle",
               "title": "Display Road Name",

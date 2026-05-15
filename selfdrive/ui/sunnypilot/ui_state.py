@@ -149,6 +149,7 @@ class UIStateSP:
     self.torque_override_lat_accel_factor = float(self.params.get("TorqueParamsOverrideLatAccelFactor", return_default=True))
     self.torque_override_friction = float(self.params.get("TorqueParamsOverrideFriction", return_default=True))
     self.true_v_ego_ui = self.params.get_bool("TrueVEgoUI")
+    self.show_tamagotchi = self.params.get_bool("ShowTamagotchi")
     self.turn_signals = self.params.get_bool("ShowTurnSignals")
     self.boot_offroad_mode = self.params.get("DeviceBootMode", return_default=True)
     self.always_offroad = self.params.get_bool("OffroadMode")
