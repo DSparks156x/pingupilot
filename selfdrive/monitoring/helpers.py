@@ -32,9 +32,9 @@ class DRIVER_MONITOR_SETTINGS:
     self._DISTRACTED_PROMPT_TIME_TILL_TERMINAL = 6.
 
     self._FACE_THRESHOLD = 0.7
-    self._EYE_THRESHOLD = 0.5
-    self._BLINK_THRESHOLD = 0.5
-    self._PHONE_THRESH = 0.5
+    self._EYE_THRESHOLD = 0.65
+    self._BLINK_THRESHOLD = 0.865
+    self._PHONE_THRESH = 0.75
 
     self._POSE_PITCH_THRESHOLD = 0.3133
     self._POSE_PITCH_THRESHOLD_SLACK = 0.3237
@@ -78,6 +78,8 @@ class DRIVER_MONITOR_SETTINGS:
 
     self._MAX_TERMINAL_ALERTS = 3  # not allowed to engage after 3 terminal alerts
     self._MAX_TERMINAL_DURATION = int(30 / self._DT_DMON)  # not allowed to engage after 30s of terminal alerts
+
+    self._ALWAYS_ON_ALERT_MIN_SPEED = 11.0 # m/s
 
 class DistractedType:
 
@@ -334,7 +336,7 @@ class DriverMonitoring:
       self.too_distracted = True
 
     # Always-on distraction lockout is temporary
-    if self.too_distracted or (self.always_on and self.awareness <= self.threshold_prompt):
+    if self.too_distracted or (self.always_on and self.awareness <= self.threshold_prompt and car_speed >= self.settings._ALWAYS_ON_ALERT_MIN_SPEED):
       self.current_events.add(EventName.tooDistracted)
 
     always_on_valid = self.always_on and not wrong_gear
@@ -371,7 +373,7 @@ class DriverMonitoring:
     if certainly_distracted or maybe_distracted:
       # should always be counting if distracted unless at standstill and reaching green
       # also will not be reaching 0 if DM is active when not engaged
-      if not (standstill_orange_exemption or always_on_red_exemption):
+      if not (standstill_orange_exemption or always_on_red_exemption or (self.always_on and not op_engaged and car_speed < self.settings._ALWAYS_ON_ALERT_MIN_SPEED)):
         self.awareness = max(self.awareness - self.step_change, -0.1)
 
     alert = None
