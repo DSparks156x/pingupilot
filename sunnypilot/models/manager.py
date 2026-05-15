@@ -30,7 +30,7 @@ class ModelManagerSP:
     self.available_models: list[custom.ModelManagerSP.ModelBundle] = []
     self.selected_bundle: custom.ModelManagerSP.ModelBundle = None
     self.active_bundle: custom.ModelManagerSP.ModelBundle = get_active_bundle(self.params)
-    self._chunk_size = 128 * 1000  # 128 KB chunks
+    self._chunk_size = 1024 * 1024  # 1 MB chunks
     self._download_start_times: dict[str, float] = {}  # Track start time per model
 
   def _calculate_eta(self, filename: str, progress: float) -> int:
@@ -148,6 +148,7 @@ class ModelManagerSP:
     self.selected_bundle = model_bundle
     self.selected_bundle.status = custom.ModelManagerSP.DownloadStatus.downloading
     os.makedirs(destination_path, exist_ok=True)
+    self._report_status()
 
     try:
       tasks = [self._process_model(model, destination_path) for model in self.selected_bundle.models]

@@ -34,7 +34,7 @@ async def verify_file(file_path: str, expected_hash: str) -> bool:
 
   sha256_hash = hashlib.sha256()
   with open(file_path, "rb") as file:
-    for chunk in iter(lambda: file.read(4096), b""):
+    for chunk in iter(lambda: file.read(1024 * 1024), b""):
       sha256_hash.update(chunk)
 
   return sha256_hash.hexdigest().lower() == expected_hash.lower()
