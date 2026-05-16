@@ -269,11 +269,6 @@ class CameraView(Widget):
         else:
           self._render_textures(src_rect, dst_rect)
 
-    if ui_state.show_tamagotchi:
-      self._tamagotchi.set_position(rect.x + rect.width - self._tamagotchi.rect.width - 4,
-                                    rect.y + rect.height - self._tamagotchi.rect.height)
-      self._tamagotchi.render()
-
   def _draw_placeholder(self, rect: rl.Rectangle):
     if self._placeholder_color:
       rl.draw_rectangle_rec(rect, self._placeholder_color)

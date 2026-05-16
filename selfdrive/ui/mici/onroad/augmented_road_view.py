@@ -237,6 +237,11 @@ class AugmentedRoadView(CameraView):
     if ui_state.started:
       self._alert_renderer.render(self._content_rect)
     self._hud_renderer.render(self._content_rect)
+    
+    if ui_state.show_tamagotchi:
+      self._tamagotchi.set_position(self._content_rect.x + self._content_rect.width - self._tamagotchi.rect.width - 4,
+                                    self._content_rect.y + self._content_rect.height - self._tamagotchi.rect.height)
+      self._tamagotchi.render()
 
     # Draw fake rounded border
     rl.draw_rectangle_rounded_lines_ex(self._content_rect, 0.2 * 1.02, 10, 50, rl.BLACK)
