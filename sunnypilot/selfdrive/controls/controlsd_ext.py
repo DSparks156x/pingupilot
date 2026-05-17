@@ -35,6 +35,11 @@ class ControlsExt(ModelStateBase):
     self.pm_services_ext = ['carControlSP']
 
   def initialize_lateral_control(self, lac, CI, dt):
+    # Don't override LatControlTorqueAlt with V0 — it has its own jerk-based tuning
+    from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
+    if isinstance(lac, LatControlTorqueAlt):
+      return lac
+
     enforce_torque_control = self.params.get_bool("EnforceTorqueControl")
     torque_versions = self.params.get("TorqueControlTune")
     if not enforce_torque_control:

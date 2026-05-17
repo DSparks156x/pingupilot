@@ -63,7 +63,7 @@ class Controls(ControlsExt):
       self.LaC = LatControlPID(self.CP, self.CP_SP, self.CI, DT_CTRL)
     elif self.CP.lateralTuning.which() == 'torque':
       is_vw_alt = False
-      if self.CP.carFingerprint.startswith("VOLKSWAGEN"):
+      if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")):
         try:
           hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           if hca_mode == 3:
@@ -141,7 +141,7 @@ class Controls(ControlsExt):
       self.LaC.reset()
 
       # Dynamically swap between standard and Alt controllers when disengaged (no reboot required)
-      if self.CP.carFingerprint.startswith("VOLKSWAGEN"):
+      if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")):
         try:
           hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           is_vw_alt_selected = (hca_mode == 3)
