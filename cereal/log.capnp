@@ -847,6 +847,13 @@ struct ControlsState @0x97ff69c53601abf1 {
     desiredLateralAccel @10 :Float32;
     desiredLateralJerk @11 :Float32;
     version @12 :Int32;
+    latAccelFF @13 :Float32;
+    jerkFF @14 :Float32;
+    latAccelFactor @15 :Float32;
+    jerkFactor @16 :Float32;
+    pidContribution @17 :Float32;
+    accelFactorBins @18 :List(Float32);
+    jerkFactorBins @19 :List(Float32);
    }
 
   struct LateralAngleState {

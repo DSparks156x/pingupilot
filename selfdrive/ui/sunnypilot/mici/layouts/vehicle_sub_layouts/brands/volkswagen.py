@@ -66,6 +66,17 @@ class BigNumericParamControl(BigButton):
       self.set_value(self._options[new_idx])
       self._params.put_nonblocking(self._param, new_idx)
 
+class BigActionControl(BigButton):
+  def __init__(self, text: str, callback):
+    super().__init__(text, "")
+    self._callback = callback
+
+  def _handle_mouse_release(self, mouse_pos: MousePos):
+    super()._handle_mouse_release(mouse_pos)
+    if self._callback:
+      self._callback()
+      self.set_value(tr("Cleared!"))
+
 
 class VolkswagenSettingsMici(BrandSettingsMici):
   def __init__(self):
@@ -106,11 +117,17 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       "VolkswagenHCACenteringFullAuthority"
     )
 
+    self.reset_alt_tuning = BigActionControl(
+      tr("Reset Alt Tuning Bins"),
+      lambda: Params().remove("VolkswagenLiveTorqueAlt")
+    )
+
     self.items = [
       self.hca_mode,
       self.hca_delta_rate,
       self.lat_jerk_factor,
       self.lat_accel_factor,
+      self.reset_alt_tuning,
       self.hca_centering_full_authority,
       self.experimental_long,
     ]
@@ -147,5 +164,7 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     self.hca_mode.set_visible(is_pq)
     self.hca_delta_rate.set_visible(is_pq)
     self.lat_jerk_factor.set_visible(is_pq)
+    self.lat_accel_factor.set_visible(is_pq)
+    self.reset_alt_tuning.set_visible(is_pq)
     self.hca_centering_full_authority.set_visible(is_pq)
     self.experimental_long.set_visible(is_long_available)
