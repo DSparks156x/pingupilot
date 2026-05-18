@@ -242,7 +242,6 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"VolkswagenHCACenteringFullAuthority", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"VolkswagenHCALatJerkFactor", {PERSISTENT | BACKUP, INT, "0"}},
     {"VolkswagenHCALatAccelFactor", {PERSISTENT | BACKUP, INT, "15"}},
-    {"VolkswagenLiveTorqueAlt", {PERSISTENT | BACKUP, JSON}},
 
     {"DynamicExperimentalControl", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"BlindSpot", {PERSISTENT | BACKUP, BOOL, "0"}},

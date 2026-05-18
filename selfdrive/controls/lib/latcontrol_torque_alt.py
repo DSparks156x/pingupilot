@@ -1,11 +1,8 @@
 import math
 import numpy as np
-import json
-import time
 from collections import deque
 
 from cereal import log
-from openpilot.common.swaglog import cloudlog
 from opendbc.car.lateral import FRICTION_THRESHOLD, get_friction
 from openpilot.common.constants import ACCELERATION_DUE_TO_GRAVITY
 from openpilot.common.filter_simple import FirstOrderFilter
@@ -84,19 +81,6 @@ class LatControlTorqueAlt(LatControl):
 
     self.extension = LatControlTorqueExt(self, CP, CP_SP, CI)
 
-    self.speed_bins = [0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0]
-    self.accel_ff_bins = None
-    self.jerk_ff_bins = None
-    self.absolute_bins_initialized = False
-      
-    self.last_param_save_time = time.monotonic()
-
-  def apply_neighborhood_bleed(self, bins, current_speed, update_value):
-    for i, bin_speed in enumerate(self.speed_bins):
-      distance = abs(current_speed - bin_speed)
-      weight = np.exp(-(distance**2) / (2 * 5.0**2)) # sigma = 5.0 m/s
-      bins[i] += update_value * weight
-
   def update_live_torque_params(self, latAccelFactor, latAccelOffset, friction):
     # Ignore live learning because torqued.py cannot model an integrator rack.
     # We strictly rely on the static baseline latAccelFactor defined in CarParams,
@@ -128,10 +112,7 @@ class LatControlTorqueAlt(LatControl):
     setpoint = expected_lateral_accel
     error = setpoint - measurement
 
-    if active != self.active_prev:
-      cloudlog.debug(f"ALT_DEBUG: Active transition: {self.active_prev} -> {active}")
-
-    if (active and not self.active_prev) or (active and not self.absolute_bins_initialized):
+    if active and not self.active_prev:
       try:
         idx = int(self.params.get("VolkswagenHCALatJerkFactor") or 0)
         if 0 <= idx < len(VOLKSWAGEN_HCA_LAT_JERK_FACTOR_STEPS):
@@ -148,53 +129,6 @@ class LatControlTorqueAlt(LatControl):
         self.update_limits()
       except ValueError:
         pass
-        
-      if not self.absolute_bins_initialized:
-        cloudlog.info(f"ALT_DEBUG: Initializing bins. HCA Jerk Factor: {self.lat_jerk_factor}, Lat Accel Factor: {self.torque_params.latAccelFactor}")
-        cached_params = None
-        try:
-          cached_params = self.params.get("VolkswagenLiveTorqueAlt")
-          cloudlog.info(f"ALT_DEBUG: Cached params type: {type(cached_params)}")
-        except Exception as e:
-          cloudlog.warning(f"ALT_DEBUG: Failed to get cached params: {e}")
-          
-        if cached_params is not None:
-          try:
-            if isinstance(cached_params, (str, bytes)):
-               cached_params = json.loads(cached_params)
-               cloudlog.info("ALT_DEBUG: Manually parsed JSON string/bytes")
-            
-            if "accel_ff_bins" in cached_params and "jerk_ff_bins" in cached_params:
-              cloudlog.info("ALT_DEBUG: Loading bins from cache")
-              self.accel_ff_bins = cached_params["accel_ff_bins"]
-              self.jerk_ff_bins = cached_params["jerk_ff_bins"]
-            else:
-              cloudlog.warning("ALT_DEBUG: Cached params missing keys")
-              cached_params = None
-          except Exception as e:
-            cloudlog.warning(f"ALT_DEBUG: Error parsing cached params: {e}")
-            cached_params = None
-
-        if cached_params is None:
-          cloudlog.info("ALT_DEBUG: No valid cache, initializing defaults")
-          base_lat_jerk = self.lat_jerk_factor
-          
-          # Default initialization curves — dimensionless, same scale as old interp tables
-          # Speeds (m/s):     [0.0,  5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0]
-          # Speeds (mph):     [  0,   11,   22,   33,   44,   55,   67,   78,   89]
-          
-          fractions_accel = np.array([0.05, 0.05, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.15])
-          # Sharp drop-off at highway speeds (>45 mph) to prevent wiggle before it has a chance to learn
-          fractions_jerk  = np.array([1.0,  1.0,  1.0,  1.0,  0.8,  0.4,  0.2,  0.1,  0.05])
-          
-          self.accel_ff_bins = fractions_accel.tolist()
-          init_jerk = max(base_lat_jerk, 0.3)  # Never initialize jerk bins to zero even at default param
-          self.jerk_ff_bins = (fractions_jerk * init_jerk).tolist()
-          cloudlog.info(f"ALT_DEBUG: Initialized defaults. Accel bins: {self.accel_ff_bins}, Jerk bins: {self.jerk_ff_bins}")
-          
-        self.absolute_bins_initialized = True
-        cloudlog.info("ALT_DEBUG: Initialization complete")
-        
     self.active_prev = active
 
     lookahead_idx = int(np.clip(-delay_frames + self.lookahead_frames, -self.lat_accel_request_buffer_len+1, -2))
@@ -205,22 +139,23 @@ class LatControlTorqueAlt(LatControl):
     # VW PQ HCA 7 rack is an integrator without virtual centering.
     # We use Jerk FF to handle dynamic turn-in and active unwinding on exit.
 
-    if self.absolute_bins_initialized:
-      jerk_speed_scaler = float(np.interp(CS.vEgo, self.speed_bins, self.jerk_ff_bins))
-      accel_ff_fraction = float(np.interp(CS.vEgo, self.speed_bins, self.accel_ff_bins))
-    else:
-      jerk_speed_scaler = 0.0
-      accel_ff_fraction = 0.0
+    # Speed-dependent scaling:
+    # 1. Jerk FF handles movement. At high speeds, it's too aggressive (wiggles).
+    #    Scale down from 100% at 15m/s (33mph) to 30% at 35m/s (78mph).
+    jerk_speed_scaler = np.interp(CS.vEgo, [15.0, 35.0], [1.0, 0.3])
+
+    # 2. Accel FF handles physical centering (caster trail). This increases with speed.
+    #    Scale up from 5% at 10m/s (22mph) to 15% at 35m/s (78mph).
+    accel_ff_fraction = np.interp(CS.vEgo, [10.0, 35.0], [0.05, 0.15])
 
     # 3. Adaptive Jerk Filter: Lower cutoff at high speed to smooth jitters.
     #    Cutoff ramps from 1.2Hz at 15m/s to 0.4Hz at 35m/s.
     jerk_cutoff = np.interp(CS.vEgo, [15.0, 35.0], [1.2, 0.4])
     self.jerk_filter.alpha = self.dt / (1 / (2 * np.pi * jerk_cutoff) + self.dt)
 
-    # Bins hold dimensionless FF scaling values (same as old interp tables).
-    # The PID output is later multiplied by latAccelFactor in torque_from_lateral_accel,
-    # so we do NOT divide by it here — that would double-correct.
-    equiv_accel_from_jerk = desired_lateral_jerk * jerk_speed_scaler
+    # To achieve FF_torque = K_j * jerk, we must pass (K_j * jerk) to the PID,
+    # which will then be multiplied by latAccelFactor at the end.
+    equiv_accel_from_jerk = desired_lateral_jerk * self.lat_jerk_factor * jerk_speed_scaler
     steady_state_accel = gravity_adjusted_future_lateral_accel * accel_ff_fraction
 
     ff = steady_state_accel + equiv_accel_from_jerk - self.torque_params.latAccelOffset
@@ -252,50 +187,6 @@ class LatControlTorqueAlt(LatControl):
       pid_log.desiredLateralAccel = float(setpoint)
       pid_log.desiredLateralJerk = float(desired_lateral_jerk)
       pid_log.saturated = bool(self._check_saturation(self.steer_max - abs(output_torque) < 1e-3, CS, steer_limited_by_safety, curvature_limited))
-
-      pid_correction = float(self.pid.p + self.pid.i + self.pid.d)
-      # Log contributions in torque space (-1 to 1) so they sum to ~output_torque
-      lat_accel_factor = max(self.torque_params.latAccelFactor, 0.01)
-      pid_log.latAccelFF = float(steady_state_accel / lat_accel_factor)
-      pid_log.jerkFF = float(equiv_accel_from_jerk / lat_accel_factor)
-      pid_log.latAccelFactor = float(accel_ff_fraction)
-      pid_log.jerkFactor = float(jerk_speed_scaler)
-      pid_log.pidContribution = float(pid_correction / lat_accel_factor)
-      
-      if self.accel_ff_bins is not None:
-        pid_log.accelFactorBins = self.accel_ff_bins
-      if self.jerk_ff_bins is not None:
-        pid_log.jerkFactorBins = self.jerk_ff_bins
-
-      # Adaptive Feed-Forward Learning (bins are in lat accel space, so use pid_correction directly)
-      if active and not freeze_integrator and abs(CS.vEgo) > 5.0 and self.absolute_bins_initialized:
-        pid_correction_for_learning = pid_correction  # lat accel space, matches bin units
-        
-        alpha_accel = 0.0001
-        alpha_jerk = 0.0001
-        
-        # 1. Learn Jerk only during transient maneuvers (high jerk)
-        if abs(desired_lateral_jerk) > 0.5:
-          delta_jerk_ff = alpha_jerk * pid_correction_for_learning * desired_lateral_jerk
-          self.apply_neighborhood_bleed(self.jerk_ff_bins, CS.vEgo, delta_jerk_ff)
-        
-        # 2. Learn Lat Accel only in steady-state (low jerk) and actual curves (high lat accel)
-        if abs(desired_lateral_jerk) < 0.2 and abs(gravity_adjusted_future_lateral_accel) > 0.5:
-          delta_accel_ff = alpha_accel * pid_correction_for_learning * gravity_adjusted_future_lateral_accel
-          self.apply_neighborhood_bleed(self.accel_ff_bins, CS.vEgo, delta_accel_ff)
-        
-        self.accel_ff_bins = np.clip(self.accel_ff_bins, 0.0, 5.0).tolist()
-        self.jerk_ff_bins = np.clip(self.jerk_ff_bins, 0.0, 10.0).tolist()
-        
-        current_time = time.monotonic()
-        if current_time - self.last_param_save_time > 30.0:
-          save_data = {
-            "accel_ff_bins": self.accel_ff_bins,
-            "jerk_ff_bins": self.jerk_ff_bins
-          }
-          # Params accepts standard Python dicts for JSON params
-          self.params.put_nonblocking("VolkswagenLiveTorqueAlt", save_data)
-          self.last_param_save_time = current_time
 
     # TODO left is positive in this convention
     return -output_torque, 0.0, pid_log
