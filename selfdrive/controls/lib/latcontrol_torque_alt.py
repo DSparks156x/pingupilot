@@ -188,5 +188,14 @@ class LatControlTorqueAlt(LatControl):
       pid_log.desiredLateralJerk = float(desired_lateral_jerk)
       pid_log.saturated = bool(self._check_saturation(self.steer_max - abs(output_torque) < 1e-3, CS, steer_limited_by_safety, curvature_limited))
 
+      pid_correction = float(self.pid.p + self.pid.i + self.pid.d)
+      # Log contributions in torque space (-1 to 1) so they sum to ~output_torque
+      lat_accel_factor = max(self.torque_params.latAccelFactor, 0.01)
+      pid_log.latAccelFF = float(steady_state_accel / lat_accel_factor)
+      pid_log.jerkFF = float(equiv_accel_from_jerk / lat_accel_factor)
+      pid_log.latAccelFactor = float(accel_ff_fraction)
+      pid_log.jerkFactor = float(jerk_speed_scaler)
+      pid_log.pidContribution = float(pid_correction / lat_accel_factor)
+
     # TODO left is positive in this convention
     return -output_torque, 0.0, pid_log

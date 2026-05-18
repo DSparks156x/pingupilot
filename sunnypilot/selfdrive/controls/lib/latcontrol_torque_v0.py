@@ -97,7 +97,8 @@ class LatControlTorque(LatControl):
       # latAccelOffset corrects roll compensation bias from device roll misalignment relative to car roll
       ff -= self.torque_params.latAccelOffset
       # TODO jerk is weighted by lat_delay for legacy reasons, but should be made independent of it
-      ff += get_friction(error, lateral_accel_deadzone, FRICTION_THRESHOLD, self.torque_params)
+      friction = get_friction(error, lateral_accel_deadzone, FRICTION_THRESHOLD, self.torque_params)
+      ff += friction
 
       freeze_integrator = steer_limited_by_safety or CS.steeringPressed or CS.vEgo < 5
       output_lataccel = self.pid.update(pid_log.error,
@@ -123,6 +124,14 @@ class LatControlTorque(LatControl):
       pid_log.desiredLateralAccel = float(setpoint)
       pid_log.desiredLateralJerk = float(desired_lateral_jerk)
       pid_log.saturated = bool(self._check_saturation(self.steer_max - abs(output_torque) < 1e-3, CS, steer_limited_by_safety, curvature_limited))
+
+      pid_correction = float(self.pid.p + self.pid.i + self.pid.d)
+      lat_accel_factor = max(self.torque_params.latAccelFactor, 0.01)
+      pid_log.latAccelFF = float((gravity_adjusted_future_lateral_accel - self.torque_params.latAccelOffset) / lat_accel_factor)
+      pid_log.jerkFF = float(friction / lat_accel_factor)
+      pid_log.latAccelFactor = float(self.torque_params.latAccelFactor)
+      pid_log.jerkFactor = float(self.torque_params.friction)
+      pid_log.pidContribution = float(pid_correction / lat_accel_factor)
 
     # TODO left is positive in this convention
     return -output_torque, 0.0, pid_log
