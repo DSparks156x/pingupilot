@@ -93,6 +93,8 @@ class CarInterface(CarInterfaceBase):
 
     if candidate == CAR.PORSCHE_MACAN_MK1:
       ret.steerActuatorDelay = 0.07
+    elif candidate == CAR.AUDI_TT_MK2:
+      ret.steerActuatorDelay = 0.08
 
     ret.pcmCruise = not ret.openpilotLongitudinalControl
     ret.stopAccel = -0.55
