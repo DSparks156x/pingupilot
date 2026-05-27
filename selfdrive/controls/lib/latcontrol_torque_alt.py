@@ -145,20 +145,21 @@ class LatControlTorqueAlt(LatControl):
     jerk_speed_scaler = np.interp(CS.vEgo, [15.0, 35.0], [1.0, 0.3])
 
     # 2. Accel FF handles physical centering (caster trail). This increases with speed.
-    #    Scale up from 5% at 10m/s (22mph) to 15% at 35m/s (78mph).
-    accel_ff_fraction = np.interp(CS.vEgo, [10.0, 35.0], [0.05, 0.15])
+    #    Scale up from 80% at 10m/s (22mph) to 125% at 35m/s (78mph).
+    accel_ff_fraction = np.interp(CS.vEgo, [10.0, 35.0], [0.8, 1.25])
 
     # 3. Adaptive Jerk Filter: Lower cutoff at high speed to smooth jitters.
     #    Cutoff ramps from 1.2Hz at 15m/s to 0.4Hz at 35m/s.
     jerk_cutoff = np.interp(CS.vEgo, [15.0, 35.0], [1.2, 0.4])
     self.jerk_filter.alpha = self.dt / (1 / (2 * np.pi * jerk_cutoff) + self.dt)
 
-    # To achieve FF_torque = K_j * jerk, we must pass (K_j * jerk) to the PID,
-    # which will then be multiplied by latAccelFactor at the end.
-    equiv_accel_from_jerk = desired_lateral_jerk * self.lat_jerk_factor * jerk_speed_scaler
+    # Accelerations and torques are fully decoupled:
+    # 1. Steady-state lateral acceleration feedforward is calculated in acceleration space, scaling normally with latAccelFactor.
+    # 2. Jerk feedforward is calculated directly in torque space, completely independent of latAccelFactor.
+    equiv_jerk_torque = desired_lateral_jerk * self.lat_jerk_factor * jerk_speed_scaler
     steady_state_accel = gravity_adjusted_future_lateral_accel * accel_ff_fraction
 
-    ff = steady_state_accel + equiv_accel_from_jerk - self.torque_params.latAccelOffset
+    ff = steady_state_accel - self.torque_params.latAccelOffset
 
     if not active:
       output_torque = 0.0
@@ -169,7 +170,7 @@ class LatControlTorqueAlt(LatControl):
 
       freeze_integrator = steer_limited_by_safety or CS.steeringPressed or CS.vEgo < 5
       output_lataccel = self.pid.update(pid_log.error, speed=CS.vEgo, feedforward=ff, freeze_integrator=freeze_integrator)
-      output_torque = self.torque_from_lateral_accel(output_lataccel, self.torque_params)
+      output_torque = self.torque_from_lateral_accel(output_lataccel, self.torque_params) + equiv_jerk_torque
 
       # Lateral acceleration torque controller extension updates
       # Overrides pid_log.error and output_torque
@@ -192,9 +193,9 @@ class LatControlTorqueAlt(LatControl):
       # Log contributions in torque space (-1 to 1) so they sum to ~output_torque
       lat_accel_factor = max(self.torque_params.latAccelFactor, 0.01)
       pid_log.latAccelFF = float(steady_state_accel / lat_accel_factor)
-      pid_log.jerkFF = float(equiv_accel_from_jerk / lat_accel_factor)
-      pid_log.latAccelFactor = float(accel_ff_fraction)
-      pid_log.jerkFactor = float(jerk_speed_scaler)
+      pid_log.jerkFF = float(equiv_jerk_torque)
+      pid_log.latAccelFactor = float(self.torque_params.latAccelFactor * accel_ff_fraction)
+      pid_log.jerkFactor = float(self.lat_jerk_factor * jerk_speed_scaler)
       pid_log.pidContribution = float(pid_correction / lat_accel_factor)
 
     # TODO left is positive in this convention
