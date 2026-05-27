@@ -81,6 +81,11 @@ class LatControlTorqueAlt(LatControl):
 
     self.extension = LatControlTorqueExt(self, CP, CP_SP, CI)
 
+  def reset(self):
+    super().reset()
+    self.pid.reset()
+    self.active_prev = False
+
   def update_live_torque_params(self, latAccelFactor, latAccelOffset, friction):
     # Ignore live learning because torqued.py cannot model an integrator rack.
     # We strictly rely on the static baseline latAccelFactor defined in CarParams,
@@ -119,7 +124,7 @@ class LatControlTorqueAlt(LatControl):
           self.lat_jerk_factor = VOLKSWAGEN_HCA_LAT_JERK_FACTOR_STEPS[idx]
         else:
           self.lat_jerk_factor = 0.0
-      except ValueError:
+      except (ValueError, TypeError):
         self.lat_jerk_factor = 0.0
 
       try:
@@ -127,7 +132,7 @@ class LatControlTorqueAlt(LatControl):
         if 0 <= laf_idx < len(VOLKSWAGEN_HCA_LAT_ACCEL_FACTOR_STEPS):
           self.torque_params.latAccelFactor = VOLKSWAGEN_HCA_LAT_ACCEL_FACTOR_STEPS[laf_idx]
         self.update_limits()
-      except ValueError:
+      except (ValueError, TypeError):
         pass
     self.active_prev = active
 
