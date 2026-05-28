@@ -110,8 +110,8 @@ def mapd_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
   return bool(os.path.exists(Paths.mapd_root()))
 
 def custom_uploader_ready(started: bool, params: Params, CP: car.CarParams) -> bool:
-  if params.get_bool("PingulinkEnable"):
-    return False
+  # if params.get_bool("PingulinkEnable"):
+  #   return False
   if not params.get_bool("OnroadUploads"):
     return only_offroad(started, params, CP)
   return always_run(started, params, CP)
