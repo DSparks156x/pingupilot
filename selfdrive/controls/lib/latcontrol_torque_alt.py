@@ -146,8 +146,8 @@ class LatControlTorqueAlt(LatControl):
 
     # Speed-dependent scaling:
     # 1. Jerk FF handles movement. At high speeds, it's too aggressive (wiggles).
-    #    Scale down from 100% at 15m/s (33mph) to 30% at 35m/s (78mph).
-    jerk_speed_scaler = np.interp(CS.vEgo, [15.0, 35.0], [1.0, 0.3])
+    #    Raised to 120% at 15m/s (33mph), scaling to 100% at 22m/s (49mph), and down to 15% at 35m/s (78mph).
+    jerk_speed_scaler = np.interp(CS.vEgo, [15.0, 22.0, 35.0], [1.2, 1.0, 0.15])
 
     # 2. Accel FF handles physical centering (caster trail). This increases with speed.
     #    Scale up from 80% at 10m/s (22mph) to 125% at 35m/s (78mph).
