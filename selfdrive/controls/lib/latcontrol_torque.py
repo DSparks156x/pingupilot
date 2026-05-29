@@ -42,17 +42,6 @@ class LatControlTorque(LatControl):
     self.lateral_accel_from_torque = CI.lateral_accel_from_torque()
     self.pid = PIDController([INTERP_SPEEDS, KP_INTERP], KI, rate=1/self.dt)
     self.update_limits()
-    self.is_vw_pq = False
-    self.base_lat_accel_factor = self.torque_params.latAccelFactor
-    self.last_max_steer_idx = -1
-    self.params = Params()
-    if CP.brand == "volkswagen":
-      try:
-        from opendbc.car.volkswagen.values import VolkswagenFlags
-        self.is_vw_pq = bool(CP.flags & VolkswagenFlags.PQ)
-      except ImportError:
-        pass
-
     self.steering_angle_deadzone_deg = self.torque_params.steeringAngleDeadzoneDeg
     self.lat_accel_request_buffer_len = int(LAT_ACCEL_REQUEST_BUFFER_SECONDS / self.dt)
     self.lat_accel_request_buffer = deque([0.] * self.lat_accel_request_buffer_len , maxlen=self.lat_accel_request_buffer_len)
@@ -72,19 +61,6 @@ class LatControlTorque(LatControl):
                         self.lateral_accel_from_torque(-self.steer_max, self.torque_params))
 
   def update(self, active, CS, VM, params, steer_limited_by_safety, desired_curvature, calibrated_pose, curvature_limited, lat_delay):
-    if self.is_vw_pq:
-      try:
-        max_steer_idx = int(self.params.get("VolkswagenHCAMaxSteer") or 0)
-        if max_steer_idx != self.last_max_steer_idx:
-          self.last_max_steer_idx = max_steer_idx
-          max_steer_values = [300, 350, 400, 450, 500]
-          if 0 <= max_steer_idx < len(max_steer_values):
-            max_steer = max_steer_values[max_steer_idx]
-            self.torque_params.latAccelFactor = self.base_lat_accel_factor * (max_steer / 300.0)
-            self.update_limits()
-      except (ValueError, TypeError):
-        pass
-
     # Override torque params from extension
     if self.extension.update_override_torque_params(self.torque_params):
       self.update_limits()

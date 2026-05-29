@@ -37,15 +37,6 @@ class VolkswagenSettings(BrandSettings):
       inline=False
     )
 
-    self.hca_max_steer = multiple_button_item_sp(
-      tr("HCA Max Steer Limit"),
-      tr("Adjust the maximum steering torque limit for Volkswagen PQ vehicles. Increasing this scales the standard controller's lateral acceleration factor accordingly. WARNING: Verify your steering rack is flashed to support limits above 300 centi-Nm."),
-      [tr("300"), tr("350"), tr("400"), tr("450"), tr("500")],
-      button_width=150,
-      callback=self._on_hca_max_steer_changed,
-      inline=False
-    )
-
     self.experimental_long = toggle_item_sp(
       lambda: tr("Experimental Longitudinal"),
       description=lambda: tr("Enable experimental longitudinal control for Volkswagen."),
@@ -57,38 +48,8 @@ class VolkswagenSettings(BrandSettings):
     self.items = [
       self.hca_mode,
       self.hca_delta_rate,
-      self.hca_max_steer,
       self.experimental_long,
     ]
-
-  def _on_hca_max_steer_changed(self, index: int):
-    previous_index = int(ui_state.params.get("VolkswagenHCAMaxSteer") or "0")
-    if index == previous_index:
-      return
-
-    if index > 0:
-      from openpilot.system.ui.lib.application import gui_app
-      from openpilot.selfdrive.ui.mici.widgets.dialog import BigConfirmationDialog
-
-      def cancel_callback():
-        self.hca_max_steer.action_item.set_selected_button(previous_index)
-
-      def confirm_callback():
-        ui_state.params.put("VolkswagenHCAMaxSteer", str(index))
-        ui_state.params.remove("LiveDelay")
-        self.hca_max_steer.action_item.set_selected_button(index)
-
-      dlg = BigConfirmationDialog(
-        tr("Scale steer limit above 3.0 Nm? (Confirm rack is flashed)"),
-        None,
-        confirm_callback=confirm_callback,
-        cancel_callback=cancel_callback
-      )
-      gui_app.push_widget(dlg)
-    else:
-      ui_state.params.put("VolkswagenHCAMaxSteer", "0")
-      ui_state.params.remove("LiveDelay")
-      self.hca_max_steer.action_item.set_selected_button(0)
 
   def update_settings(self):
     platform = None
@@ -121,7 +82,6 @@ class VolkswagenSettings(BrandSettings):
 
     self.hca_mode.set_visible(self.is_pq)
     self.hca_delta_rate.set_visible(self.is_pq)
-    self.hca_max_steer.set_visible(self.is_pq)
     self.experimental_long.set_visible(self.alpha_long_available)
 
     hca_mode_param = int(ui_state.params.get("VolkswagenHCAMode") or "1")
@@ -129,6 +89,3 @@ class VolkswagenSettings(BrandSettings):
 
     hca_delta_rate_param = int(ui_state.params.get("VolkswagenHCADeltaRate") or "1")
     self.hca_delta_rate.action_item.set_selected_button(hca_delta_rate_param)
-
-    hca_max_steer_param = int(ui_state.params.get("VolkswagenHCAMaxSteer") or "0")
-    self.hca_max_steer.action_item.set_selected_button(hca_max_steer_param)

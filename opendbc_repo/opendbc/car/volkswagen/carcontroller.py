@@ -47,13 +47,6 @@ class CarController(CarControllerBase):
       self.CCS = pqcan
       self.CCP.STEER_DELTA_UP = self.CP_SP.volkswagenHCADeltaRate
       self.CCP.STEER_DELTA_DOWN = self.CP_SP.volkswagenHCADeltaRate
-      try:
-        max_steer_idx = int(self.params.get("VolkswagenHCAMaxSteer") or 0)
-        max_steer_values = [300, 350, 400, 450, 500]
-        if 0 <= max_steer_idx < len(max_steer_values):
-          self.CCP.STEER_MAX = max_steer_values[max_steer_idx]
-      except (ValueError, TypeError):
-        pass
     elif CP.flags & VolkswagenFlags.MLB:
       self.CCS = mlbcan
     else:
@@ -85,15 +78,6 @@ class CarController(CarControllerBase):
         self.CCP.STEER_DELTA_DOWN = new_rate
       except ValueError:
         pass
-
-      if self.CP.flags & VolkswagenFlags.PQ:
-        try:
-          max_steer_idx = int(self.params.get("VolkswagenHCAMaxSteer") or 0)
-          max_steer_values = [300, 350, 400, 450, 500]
-          if 0 <= max_steer_idx < len(max_steer_values):
-            self.CCP.STEER_MAX = max_steer_values[max_steer_idx]
-        except (ValueError, TypeError):
-          pass
     self.lat_active_prev = CC.latActive
 
     # **** Steering Controls ************************************************ #
