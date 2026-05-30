@@ -100,7 +100,7 @@ class Uploader:
     self.last_filename = ""
 
     self.immediate_folders = ["crash/", "boot/"]
-    self.immediate_priority = {"qlog": 0, "qlog.zst": 0}
+    self.immediate_priority = {"qlog": 0, "qlog.zst": 0, "rlog": 1, "rlog.zst": 1}
 
   def list_upload_files(self, metered: bool) -> Iterator[tuple[str, str, str]]:
     for logdir in listdir_by_creation(self.root):
@@ -118,7 +118,7 @@ class Uploader:
           continue
 
         # RESTRICTION: On LTE (metered), only auto-upload qlogs
-        if metered and "qcamera" in name:
+        if metered and ("qcamera" in name or "rlog" in name):
           continue
 
         key = os.path.join(logdir, name)
@@ -424,6 +424,7 @@ def main(exit_event: threading.Event | None = None) -> None:
   last_upload_time = 0
   success = None
   last_active_power = None
+  last_network_type = NetworkType.none
 
   startup_time = time.monotonic()
   backoff = 0.1
@@ -441,6 +442,12 @@ def main(exit_event: threading.Event | None = None) -> None:
       peripheral_state = sm['peripheralState']
 
       network_type = device_state.networkType if not force_wifi else NetworkType.wifi
+      if network_type != last_network_type:
+        print(f"Pingulink uploader: Network status changed from {last_network_type} to {network_type}")
+        backoff = 0.1
+        last_pending_check_time = 0  # Force immediate check
+        last_network_type = network_type
+
       network_metered = device_state.networkMetered
       voltage = peripheral_state.voltage
 
@@ -504,7 +511,19 @@ def main(exit_event: threading.Event | None = None) -> None:
         # If we just booted/started (uploader runtime < 120s), or if deviceState is invalid, or if onroad,
         # sleep for a short duration (10s) to allow Wi-Fi to negotiate and connect.
         is_startup = (time.monotonic() - startup_time) < 120
-        time.sleep(10 if (is_startup or not sm.valid['deviceState'] or not offroad) else 1800)
+        sleep_duration = 10 if (is_startup or not sm.valid['deviceState'] or not offroad) else 1800
+        
+        # Sleep responsively
+        start_sleep = time.monotonic()
+        while time.monotonic() - start_sleep < sleep_duration and not exit_event.is_set():
+          sm.update(1000)
+          new_network_type = sm['deviceState'].networkType if not force_wifi else NetworkType.wifi
+          if new_network_type != NetworkType.none:
+            print("Pingulink uploader: Network connected during sleep, waking up")
+            backoff = 0.1
+            last_pending_check_time = 0
+            last_network_type = new_network_type
+            break
         continue
 
       # Polling for pending uploads (15s if active, 30m otherwise)
@@ -537,7 +556,17 @@ def main(exit_event: threading.Event | None = None) -> None:
         backoff = min(backoff * 2, 120)
 
       if allow_sleep:
-        time.sleep(backoff + random.uniform(0, backoff))
+        sleep_duration = backoff + random.uniform(0, backoff)
+        start_sleep = time.monotonic()
+        while time.monotonic() - start_sleep < sleep_duration and not exit_event.is_set():
+          sm.update(1000)
+          new_network_type = sm['deviceState'].networkType if not force_wifi else NetworkType.wifi
+          if new_network_type != network_type:
+            print(f"Pingulink uploader: Network status changed from {network_type} to {new_network_type}, waking up")
+            backoff = 0.1
+            last_pending_check_time = 0
+            last_network_type = new_network_type
+            break
 
     except Exception as e:
       cloudlog.exception("pingulink_uploader_main_loop_exception")
