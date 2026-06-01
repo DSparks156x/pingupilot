@@ -19,38 +19,38 @@ CURVATURE_RATE_GRID = [0.0, 0.001, 0.003, 0.006, 0.01, 0.02, 0.04, 0.06, 0.08, 0
 
 # 8 speeds x 10 curvatures
 HOLDING_MAP = [
-  [  0.0,   3.6,   9.0,  18.1,  36.1,  72.2, 108.3, 144.5, 180.6, 270.9],
-  [  0.0,   7.3,  18.3,  36.7,  73.4, 146.7, 220.1, 293.4, 366.8, 500.0],
-  [  0.0,  26.0,  65.0, 130.1, 260.1, 500.0, 500.0, 500.0, 500.0, 500.0],
-  [  0.0,  50.1, 125.2, 250.5, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
-  [  0.0,  60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
-  [  0.0,  60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
-  [  0.0,  32.9,  82.2, 164.3, 328.6, 500.0, 500.0, 500.0, 500.0, 500.0],
-  [  0.0,  23.0,  57.5, 114.9, 229.9, 459.7, 500.0, 500.0, 500.0, 500.0]
+  [0.0, 4.4, 11.0, 22.0, 44.0, 88.0, 131.9, 175.9, 219.9, 329.8],
+  [0.0, 8.0, 20.0, 40.0, 80.0, 160.1, 240.2, 320.2, 400.3, 500.0],
+  [0.0, 26.5, 66.2, 132.3, 264.6, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [0.0, 50.2, 125.5, 251.1, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [0.0, 60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [0.0, 60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [0.0, 60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [0.0, 20.9, 52.4, 104.7, 209.5, 418.9, 500.0, 500.0, 500.0, 500.0],
 ]  # cNm
 
 # 8 speeds x 10 rates of curvature (winding)
 WIND_MAP = [
-  [  0.0,   0.1,   0.4,   0.8,   1.3,   2.5,   5.1,   7.7,  10.2,  12.8],
-  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
-  [  0.0,   2.3,   6.8,  13.5,  22.5,  45.1,  90.1, 135.2, 180.3, 225.4],
-  [  0.0,   2.4,   7.1,  14.2,  23.7,  47.3,  94.7, 142.0, 189.4, 236.7],
-  [  0.0,   9.5,  28.6,  57.2,  95.3, 190.6, 300.0, 300.0, 300.0, 300.0],
-  [  0.0,  15.0,  45.0,  90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
-  [  0.0,  15.0,  45.0,  90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
-  [  0.0,  15.0,  45.0,  90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0]
+  [0.0, 0.1, 0.3, 0.6, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0],
+  [0.0, 0.3, 1.0, 2.0, 3.4, 6.8, 13.6, 20.4, 27.1, 33.9],
+  [0.0, 1.7, 5.2, 10.4, 17.3, 34.7, 69.3, 104.0, 138.7, 173.3],
+  [0.0, 1.8, 5.4, 10.9, 18.1, 36.3, 72.5, 108.8, 145.1, 181.4],
+  [0.0, 9.9, 29.6, 59.2, 98.7, 197.5, 300.0, 300.0, 300.0, 300.0],
+  [0.0, 15.0, 45.0, 90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
+  [0.0, 15.0, 45.0, 90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
+  [0.0, 15.0, 45.0, 90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
 ]  # cNm
 
 # 8 speeds x 10 rates of curvature (unwinding)
 UNWIND_MAP = [
-  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
-  [  0.0,   0.7,   1.9,   3.9,   6.5,  13.0,  26.0,  39.0,  52.0,  65.0],
-  [  0.0,   3.0,   9.0,  18.1,  30.1,  60.2, 120.4, 180.6, 240.8, 300.0],
-  [  0.0,   2.6,   7.9,  15.7,  26.2,  52.4, 104.8, 157.2, 209.6, 262.0],
-  [  0.0,   0.3,   0.8,   1.6,   2.6,   5.3,  10.5,  15.7,  21.0,  26.2],
-  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
-  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
-  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0]
+  [0.0, 0.1, 0.3, 0.6, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0],
+  [0.0, 0.7, 1.9, 3.9, 6.5, 12.9, 25.8, 38.8, 51.7, 64.6],
+  [0.0, 2.8, 8.3, 16.7, 27.8, 55.5, 111.0, 166.6, 222.1, 277.6],
+  [0.0, 3.1, 9.2, 18.5, 30.8, 61.6, 123.2, 184.7, 246.3, 300.0],
+  [0.0, 0.8, 2.5, 4.9, 8.2, 16.5, 33.0, 49.4, 65.9, 82.4],
+  [0.0, 0.1, 0.3, 0.6, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0],
+  [0.0, 0.1, 0.3, 0.6, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0],
+  [0.0, 0.1, 0.3, 0.6, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0],
 ]
 
 HCA_LIMIT = 300.0
@@ -65,37 +65,36 @@ LP_FILTER_CUTOFF_HZ = 1.2
 LAT_ACCEL_REQUEST_BUFFER_SECONDS = 1.0
 VERSION = 4
 
+
 def interpolate_2d(grid_x, grid_y, table_z, x, y):
   """
   Performs fast bilinear interpolation over the 2D calibration grids.
   """
   x = np.clip(x, grid_x[0], grid_x[-1])
   y = np.clip(y, grid_y[0], grid_y[-1])
-  
+
   idx_x = np.searchsorted(grid_x, x)
   idx_y = np.searchsorted(grid_y, y)
-  
+
   idx_x = max(1, min(idx_x, len(grid_x) - 1))
   idx_y = max(1, min(idx_y, len(grid_y) - 1))
-  
+
   x0, x1 = grid_x[idx_x - 1], grid_x[idx_x]
   y0, y1 = grid_y[idx_y - 1], grid_y[idx_y]
-  
+
   z00 = table_z[idx_x - 1][idx_y - 1]
   z01 = table_z[idx_x - 1][idx_y]
   z10 = table_z[idx_x][idx_y - 1]
   z11 = table_z[idx_x][idx_y]
-  
+
   dx = x1 - x0
   dy = y1 - y0
-  
+
   tx = (x - x0) / dx if dx > 0 else 0.0
   ty = (y - y0) / dy if dy > 0 else 0.0
-  
-  return float((1.0 - tx) * (1.0 - ty) * z00 + \
-               tx * (1.0 - ty) * z10 + \
-               (1.0 - tx) * ty * z01 + \
-               tx * ty * z11)
+
+  return float((1.0 - tx) * (1.0 - ty) * z00 + tx * (1.0 - ty) * z10 + (1.0 - tx) * ty * z01 + tx * ty * z11)
+
 
 class LatControlTorqueMap(LatControl):
   def __init__(self, CP, CP_SP, CI, dt):
@@ -103,15 +102,15 @@ class LatControlTorqueMap(LatControl):
     self.torque_params = CP.lateralTuning.torque.as_builder()
     self.torque_from_lateral_accel = CI.torque_from_lateral_accel()
     self.lateral_accel_from_torque = CI.lateral_accel_from_torque()
-    
+
     # PID feedback loop wrapper kept for cereal logging and extension compatibility
-    self.pid = PIDController([INTERP_SPEEDS, KP_INTERP], KI, rate=1/self.dt)
+    self.pid = PIDController([INTERP_SPEEDS, KP_INTERP], KI, rate=1 / self.dt)
     self.update_limits()
-    
+
     self.steering_angle_deadzone_deg = self.torque_params.steeringAngleDeadzoneDeg
     self.lat_accel_request_buffer_len = int(LAT_ACCEL_REQUEST_BUFFER_SECONDS / self.dt)
-    self.lat_accel_request_buffer = deque([0.] * self.lat_accel_request_buffer_len, maxlen=self.lat_accel_request_buffer_len)
-    
+    self.lat_accel_request_buffer = deque([0.0] * self.lat_accel_request_buffer_len, maxlen=self.lat_accel_request_buffer_len)
+
     # Low-pass filter for curvature rate to suppress planner step noise
     self.curvature_rate_filter = FirstOrderFilter(0.0, 1 / (2 * np.pi * LP_FILTER_CUTOFF_HZ), self.dt)
     self.prev_desired_curvature = 0.0
@@ -138,16 +137,16 @@ class LatControlTorqueMap(LatControl):
 
     pid_log = log.ControlsState.LateralTorqueState.new_message()
     pid_log.version = VERSION
-    
+
     measured_curvature = -VM.calc_curvature(math.radians(CS.steeringAngleDeg - params.angleOffsetDeg), CS.vEgo, params.roll)
-    measurement = measured_curvature * CS.vEgo ** 2
-    
-    future_desired_lateral_accel = desired_curvature * CS.vEgo ** 2
+    measurement = measured_curvature * CS.vEgo**2
+
+    future_desired_lateral_accel = desired_curvature * CS.vEgo**2
     self.lat_accel_request_buffer.append(future_desired_lateral_accel)
 
     roll_compensation = params.roll * ACCELERATION_DUE_TO_GRAVITY
     curvature_deadzone = abs(VM.calc_curvature(math.radians(self.steering_angle_deadzone_deg), CS.vEgo, 0.0))
-    lateral_accel_deadzone = curvature_deadzone * CS.vEgo ** 2
+    lateral_accel_deadzone = curvature_deadzone * CS.vEgo**2
 
     # Setpoint alignment based on physical latency lag
     delay_frames = int(np.clip(lat_delay / self.dt + 1, 1, self.lat_accel_request_buffer_len))
@@ -175,7 +174,7 @@ class LatControlTorqueMap(LatControl):
     # Wind: curvature magnitude is increasing; Unwind: curvature magnitude is decreasing
     is_wind = abs(desired_curvature) >= abs(self.prev_desired_curvature)
     transient_map = WIND_MAP if is_wind else UNWIND_MAP
-    
+
     transient_torque_mag = interpolate_2d(SPEED_GRID, CURVATURE_RATE_GRID, transient_map, CS.vEgo, abs(desired_curvature_rate))
     transient_torque = math.copysign(transient_torque_mag, desired_curvature_rate)
 
@@ -199,7 +198,7 @@ class LatControlTorqueMap(LatControl):
       normalized_output = 0.0
     else:
       pid_log.error = float(error)
-      
+
       # Combine feedforward and dynamically scheduled feedback components
       output_torque = ff_torque + p_contribution + i_contribution
       output_torque = np.clip(output_torque, -HCA_LIMIT, HCA_LIMIT)
@@ -211,9 +210,26 @@ class LatControlTorqueMap(LatControl):
       self.pid.f = ff_accel
 
       # Lateral extension updates
-      pid_log, normalized_output = self.extension.update(CS, VM, self.pid, params, ff_accel, pid_log, setpoint, measurement, calibrated_pose, roll_compensation,
-                                                         future_desired_lateral_accel, measurement, lateral_accel_deadzone, future_desired_lateral_accel - roll_compensation,
-                                                         desired_curvature, measured_curvature, steer_limited_by_safety, normalized_output)
+      pid_log, normalized_output = self.extension.update(
+        CS,
+        VM,
+        self.pid,
+        params,
+        ff_accel,
+        pid_log,
+        setpoint,
+        measurement,
+        calibrated_pose,
+        roll_compensation,
+        future_desired_lateral_accel,
+        measurement,
+        lateral_accel_deadzone,
+        future_desired_lateral_accel - roll_compensation,
+        desired_curvature,
+        measured_curvature,
+        steer_limited_by_safety,
+        normalized_output,
+      )
 
       pid_log.active = True
       pid_log.p = float(self.pid.p)
