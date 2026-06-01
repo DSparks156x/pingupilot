@@ -63,17 +63,23 @@ class Controls(ControlsExt):
       self.LaC = LatControlPID(self.CP, self.CP_SP, self.CI, DT_CTRL)
     elif self.CP.lateralTuning.which() == 'torque':
       is_vw_alt = False
+      is_vw_map = False
       if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")):
         try:
           hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           if hca_mode == 3:
             is_vw_alt = True
+          elif hca_mode == 4:
+            is_vw_map = True
         except ValueError:
           pass
 
       if is_vw_alt:
         from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
         self.LaC = LatControlTorqueAlt(self.CP, self.CP_SP, self.CI, DT_CTRL)
+      elif is_vw_map:
+        from openpilot.selfdrive.controls.lib.latcontrol_torque_map import LatControlTorqueMap
+        self.LaC = LatControlTorqueMap(self.CP, self.CP_SP, self.CI, DT_CTRL)
       else:
         self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
 
@@ -140,20 +146,28 @@ class Controls(ControlsExt):
     if not CC.latActive:
       self.LaC.reset()
 
-      # Dynamically swap between standard and Alt controllers when disengaged (no reboot required)
+      # Dynamically swap between standard, Alt, and Map controllers when disengaged (no reboot required)
       if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")):
         try:
           hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           is_vw_alt_selected = (hca_mode == 3)
+          is_vw_map_selected = (hca_mode == 4)
           
           # We need to import locally to check type
           from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
+          from openpilot.selfdrive.controls.lib.latcontrol_torque_map import LatControlTorqueMap
+          
           is_vw_alt_active = isinstance(self.LaC, LatControlTorqueAlt)
+          is_vw_map_active = isinstance(self.LaC, LatControlTorqueMap)
+          is_standard_active = not is_vw_alt_active and not is_vw_map_active
           
           if is_vw_alt_selected and not is_vw_alt_active:
             self.LaC = LatControlTorqueAlt(self.CP, self.CP_SP, self.CI, DT_CTRL)
             self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
-          elif not is_vw_alt_selected and is_vw_alt_active:
+          elif is_vw_map_selected and not is_vw_map_active:
+            self.LaC = LatControlTorqueMap(self.CP, self.CP_SP, self.CI, DT_CTRL)
+            self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
+          elif not is_vw_alt_selected and not is_vw_map_selected and not is_standard_active:
             self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
             self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
         except ValueError:

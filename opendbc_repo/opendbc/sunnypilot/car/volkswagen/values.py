@@ -13,6 +13,7 @@ class VolkswagenHCAMode(IntEnum):
   HCA_7 = 1
   HCA_7_CENTERING = 2
   HCA_7_ALT = 3
+  HCA_7_MAP = 4
 
 
 class VolkswagenHCADeltaRate(IntEnum):
@@ -27,6 +28,7 @@ VOLKSWAGEN_HCA_MODE_MAP = {
   VolkswagenHCAMode.HCA_7: 7,
   VolkswagenHCAMode.HCA_7_CENTERING: 7,
   VolkswagenHCAMode.HCA_7_ALT: 7,
+  VolkswagenHCAMode.HCA_7_MAP: 7,
 }
 
 VOLKSWAGEN_HCA_DELTA_RATE_MAP = {

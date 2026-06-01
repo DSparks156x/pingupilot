@@ -20,7 +20,7 @@ class VolkswagenSettings(BrandSettings):
     self.hca_mode = multiple_button_item_sp(
       tr("HCA Mode"),
       tr("Select the HCA mode for Volkswagen vehicles."),
-      [tr("HCA 5"), tr("HCA 7"), tr("HCA 7 Centering")],
+      [tr("HCA 5"), tr("HCA 7"), tr("HCA 7 Centering"), tr("HCA 7 Alt Controller"), tr("HCA 7 Map Controller")],
       button_width=200,
       callback=lambda index: ui_state.params.put("VolkswagenHCAMode", index),
       param="VolkswagenHCAMode",
