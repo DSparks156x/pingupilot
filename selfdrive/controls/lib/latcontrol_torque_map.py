@@ -19,45 +19,47 @@ CURVATURE_RATE_GRID = [0.0, 0.001, 0.003, 0.006, 0.01, 0.02, 0.04, 0.06, 0.08, 0
 
 # 8 speeds x 10 curvatures
 HOLDING_MAP = [
-  [0.0, 20.0, 50.0, 100.0, 200.0, 350.0, 450.0, 500.0, 500.0, 500.0],
-  [0.0, 20.0, 50.0, 100.0, 200.0, 350.0, 450.0, 500.0, 500.0, 500.0],
-  [0.0, 25.0, 60.0, 120.0, 240.0, 400.0, 480.0, 500.0, 500.0, 500.0],
-  [0.0, 25.0, 60.0, 120.0, 240.0, 400.0, 480.0, 500.0, 500.0, 500.0],
-  [0.0, 30.0, 70.0, 140.0, 280.0, 450.0, 500.0, 500.0, 500.0, 500.0],
-  [0.0, 30.0, 70.0, 140.0, 280.0, 450.0, 500.0, 500.0, 500.0, 500.0],
-  [0.0, 35.0, 80.0, 160.0, 320.0, 480.0, 500.0, 500.0, 500.0, 500.0],
-  [0.0, 35.0, 80.0, 160.0, 320.0, 480.0, 500.0, 500.0, 500.0, 500.0],
-]
+  [  0.0,   3.6,   9.0,  18.1,  36.1,  72.2, 108.3, 144.5, 180.6, 270.9],
+  [  0.0,   7.3,  18.3,  36.7,  73.4, 146.7, 220.1, 293.4, 366.8, 500.0],
+  [  0.0,  26.0,  65.0, 130.1, 260.1, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [  0.0,  50.1, 125.2, 250.5, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [  0.0,  60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [  0.0,  60.0, 150.0, 300.0, 500.0, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [  0.0,  32.9,  82.2, 164.3, 328.6, 500.0, 500.0, 500.0, 500.0, 500.0],
+  [  0.0,  23.0,  57.5, 114.9, 229.9, 459.7, 500.0, 500.0, 500.0, 500.0]
+]  # cNm
 
 # 8 speeds x 10 rates of curvature (winding)
 WIND_MAP = [
-  [0.0, 10.0, 30.0, 60.0, 100.0, 180.0, 250.0, 300.0, 300.0, 300.0],
-  [0.0, 10.0, 30.0, 60.0, 100.0, 180.0, 250.0, 300.0, 300.0, 300.0],
-  [0.0, 8.0, 24.0, 48.0, 80.0, 150.0, 220.0, 280.0, 300.0, 300.0],
-  [0.0, 8.0, 24.0, 48.0, 80.0, 150.0, 220.0, 280.0, 300.0, 300.0],
-  [0.0, 6.0, 18.0, 36.0, 60.0, 120.0, 180.0, 240.0, 280.0, 300.0],
-  [0.0, 6.0, 18.0, 36.0, 60.0, 120.0, 180.0, 240.0, 280.0, 300.0],
-  [0.0, 4.0, 12.0, 24.0, 40.0, 80.0, 120.0, 180.0, 220.0, 250.0],
-  [0.0, 4.0, 12.0, 24.0, 40.0, 80.0, 120.0, 180.0, 220.0, 250.0],
-]
+  [  0.0,   0.1,   0.4,   0.8,   1.3,   2.5,   5.1,   7.7,  10.2,  12.8],
+  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
+  [  0.0,   2.3,   6.8,  13.5,  22.5,  45.1,  90.1, 135.2, 180.3, 225.4],
+  [  0.0,   2.4,   7.1,  14.2,  23.7,  47.3,  94.7, 142.0, 189.4, 236.7],
+  [  0.0,   9.5,  28.6,  57.2,  95.3, 190.6, 300.0, 300.0, 300.0, 300.0],
+  [  0.0,  15.0,  45.0,  90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
+  [  0.0,  15.0,  45.0,  90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0],
+  [  0.0,  15.0,  45.0,  90.0, 150.0, 300.0, 300.0, 300.0, 300.0, 300.0]
+]  # cNm
 
-# 8 speeds x 10 rates of curvature (unwinding - lower torque needed due to centering trail support)
+# 8 speeds x 10 rates of curvature (unwinding)
 UNWIND_MAP = [
-  [0.0, 5.0, 15.0, 30.0, 50.0, 90.0, 125.0, 150.0, 150.0, 150.0],
-  [0.0, 5.0, 15.0, 30.0, 50.0, 90.0, 125.0, 150.0, 150.0, 150.0],
-  [0.0, 4.0, 12.0, 24.0, 40.0, 75.0, 110.0, 140.0, 150.0, 150.0],
-  [0.0, 4.0, 12.0, 24.0, 40.0, 75.0, 110.0, 140.0, 150.0, 150.0],
-  [0.0, 3.0, 9.0, 18.0, 30.0, 60.0, 90.0, 120.0, 140.0, 150.0],
-  [0.0, 3.0, 9.0, 18.0, 30.0, 60.0, 90.0, 120.0, 140.0, 150.0],
-  [0.0, 2.0, 6.0, 12.0, 20.0, 40.0, 60.0, 90.0, 110.0, 125.0],
-  [0.0, 2.0, 6.0, 12.0, 20.0, 40.0, 60.0, 90.0, 110.0, 125.0],
+  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
+  [  0.0,   0.7,   1.9,   3.9,   6.5,  13.0,  26.0,  39.0,  52.0,  65.0],
+  [  0.0,   3.0,   9.0,  18.1,  30.1,  60.2, 120.4, 180.6, 240.8, 300.0],
+  [  0.0,   2.6,   7.9,  15.7,  26.2,  52.4, 104.8, 157.2, 209.6, 262.0],
+  [  0.0,   0.3,   0.8,   1.6,   2.6,   5.3,  10.5,  15.7,  21.0,  26.2],
+  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
+  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0],
+  [  0.0,   0.1,   0.3,   0.6,   1.0,   2.0,   4.0,   6.0,   8.0,  10.0]
 ]
 
-KP = 0.4
-KI = 0.15
+HCA_LIMIT = 300.0
+
+KP = 60.0
+KI = 22.5
 
 INTERP_SPEEDS = [1, 1.5, 2.0, 3.0, 5, 7.5, 10, 15, 30]
-KP_INTERP = [200, 100, 50, 20, 8.0, 4.0, 2.5, 1.0, KP]
+KP_INTERP = [30000.0, 15000.0, 7500.0, 3000.0, 1200.0, 600.0, 375.0, 150.0, KP]
 
 LP_FILTER_CUTOFF_HZ = 1.2
 LAT_ACCEL_REQUEST_BUFFER_SECONDS = 1.0
@@ -102,7 +104,7 @@ class LatControlTorqueMap(LatControl):
     self.torque_from_lateral_accel = CI.torque_from_lateral_accel()
     self.lateral_accel_from_torque = CI.lateral_accel_from_torque()
     
-    # PID feedback loop operates with reduced Kp to avoid fighting the feedforward maps
+    # PID feedback loop wrapper kept for cereal logging and extension compatibility
     self.pid = PIDController([INTERP_SPEEDS, KP_INTERP], KI, rate=1/self.dt)
     self.update_limits()
     
@@ -114,15 +116,21 @@ class LatControlTorqueMap(LatControl):
     self.curvature_rate_filter = FirstOrderFilter(0.0, 1 / (2 * np.pi * LP_FILTER_CUTOFF_HZ), self.dt)
     self.prev_desired_curvature = 0.0
 
+    # Custom error integral state in lateral acceleration space
+    self.error_integral = 0.0
+
     self.extension = LatControlTorqueExt(self, CP, CP_SP, CI)
+
+  def reset(self):
+    super().reset()
+    self.error_integral = 0.0
 
   def update_live_torque_params(self, latAccelFactor, latAccelOffset, friction):
     # Static mapping relies completely on the hardcoded calibrated grids
     pass
 
   def update_limits(self):
-    self.pid.set_limits(self.lateral_accel_from_torque(self.steer_max, self.torque_params),
-                        self.lateral_accel_from_torque(-self.steer_max, self.torque_params))
+    self.pid.set_limits(1.0, -1.0)
 
   def update(self, active, CS, VM, params, steer_limited_by_safety, desired_curvature, calibrated_pose, curvature_limited, lat_delay):
     if self.extension.update_override_torque_params(self.torque_params):
@@ -147,6 +155,13 @@ class LatControlTorqueMap(LatControl):
     setpoint = expected_lateral_accel
     error = setpoint - measurement
 
+    # Accumulate lateral acceleration error integral with anti-windup clamping
+    if active and not CS.steeringPressed and CS.vEgo >= 5:
+      self.error_integral += error * self.dt
+      self.error_integral = np.clip(self.error_integral, -2.0, 2.0)
+    else:
+      self.error_integral = 0.0
+
     # Calculate planned future curvature rate (jerk)
     raw_curvature_rate = (desired_curvature - self.prev_desired_curvature) / self.dt
     desired_curvature_rate = self.curvature_rate_filter.update(raw_curvature_rate)
@@ -167,44 +182,56 @@ class LatControlTorqueMap(LatControl):
     # Total 2D Map Feedforward Torque
     ff_torque = holding_torque + transient_torque
 
-    # Convert ff_torque back into lateral acceleration space for the standard PID helper updates
-    lat_accel_factor = max(self.torque_params.latAccelFactor, 0.01)
-    ff_accel = (ff_torque / lat_accel_factor) - roll_compensation
+    ff_accel = ff_torque / HCA_LIMIT
+
+    # 3. Scheduled Feedback Torque in lateral acceleration space:
+    # Schedule P and I gains directly in physical torque space (cNm / (m/s^2))
+    self.pid.speed = CS.vEgo
+    Kp = self.pid.k_p
+    Ki = self.pid.k_i
+
+    p_contribution = Kp * error
+    i_contribution = Ki * self.error_integral
 
     if not active:
       output_torque = 0.0
       pid_log.active = False
+      normalized_output = 0.0
     else:
       pid_log.error = float(error)
-
-      freeze_integrator = steer_limited_by_safety or CS.steeringPressed or CS.vEgo < 5
-      output_lataccel = self.pid.update(pid_log.error, speed=CS.vEgo, feedforward=ff_accel, freeze_integrator=freeze_integrator)
       
-      # Feedforward maps determine 90%+ of the rack torque, PID handles minor residuals
-      output_torque = self.torque_from_lateral_accel(output_lataccel, self.torque_params)
+      # Combine feedforward and dynamically scheduled feedback components
+      output_torque = ff_torque + p_contribution + i_contribution
+      output_torque = np.clip(output_torque, -HCA_LIMIT, HCA_LIMIT)
+      normalized_output = output_torque / HCA_LIMIT
+
+      # Sync calculated components back to self.pid to ensure 100% compatibility with extensions and logging
+      self.pid.p = p_contribution / HCA_LIMIT
+      self.pid.i = i_contribution / HCA_LIMIT
+      self.pid.f = ff_accel
 
       # Lateral extension updates
-      pid_log, output_torque = self.extension.update(CS, VM, self.pid, params, ff_accel, pid_log, setpoint, measurement, calibrated_pose, roll_compensation,
-                                                     future_desired_lateral_accel, measurement, lateral_accel_deadzone, future_desired_lateral_accel - roll_compensation,
-                                                     desired_curvature, measured_curvature, steer_limited_by_safety, output_torque)
+      pid_log, normalized_output = self.extension.update(CS, VM, self.pid, params, ff_accel, pid_log, setpoint, measurement, calibrated_pose, roll_compensation,
+                                                         future_desired_lateral_accel, measurement, lateral_accel_deadzone, future_desired_lateral_accel - roll_compensation,
+                                                         desired_curvature, measured_curvature, steer_limited_by_safety, normalized_output)
 
       pid_log.active = True
       pid_log.p = float(self.pid.p)
       pid_log.i = float(self.pid.i)
       pid_log.d = float(self.pid.d)
       pid_log.f = float(self.pid.f)
-      pid_log.output = float(-output_torque)
+      pid_log.output = float(-normalized_output)
       pid_log.actualLateralAccel = float(measurement)
       pid_log.desiredLateralAccel = float(setpoint)
       pid_log.desiredLateralJerk = float(desired_curvature_rate)
-      pid_log.saturated = bool(self._check_saturation(self.steer_max - abs(output_torque) < 1e-3, CS, steer_limited_by_safety, curvature_limited))
+      pid_log.saturated = bool(self._check_saturation(1.0 - abs(normalized_output) < 1e-3, CS, steer_limited_by_safety, curvature_limited))
 
       pid_correction = float(self.pid.p + self.pid.i + self.pid.d)
       # Normalize telemetry contributions for graph renders and diagnostics
-      pid_log.latAccelFF = float(holding_torque / lat_accel_factor)
-      pid_log.jerkFF = float(transient_torque / lat_accel_factor)
-      pid_log.latAccelFactor = float(lat_accel_factor)
-      pid_log.jerkFactor = float(1.0)
-      pid_log.pidContribution = float(pid_correction / lat_accel_factor)
+      pid_log.latAccelFF = float(holding_torque / HCA_LIMIT)
+      pid_log.jerkFF = float(transient_torque / HCA_LIMIT)
+      pid_log.latAccelFactor = float(HCA_LIMIT)
+      pid_log.jerkFactor = 1.0
+      pid_log.pidContribution = float(pid_correction)
 
-    return -output_torque, 0.0, pid_log
+    return -normalized_output, 0.0, pid_log
