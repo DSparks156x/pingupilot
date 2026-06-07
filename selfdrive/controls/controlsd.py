@@ -147,7 +147,7 @@ class Controls(ControlsExt):
       self.LaC.reset()
 
       # Dynamically swap between standard, Alt, and Map controllers when disengaged (no reboot required)
-      if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")):
+      if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")) and self.CP.lateralTuning.which() == 'torque':
         try:
           hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           is_vw_alt_selected = (hca_mode == 3)

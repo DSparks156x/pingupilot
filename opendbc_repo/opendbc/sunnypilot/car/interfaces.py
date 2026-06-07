@@ -176,3 +176,12 @@ def _initialize_volkswagen(CP: structs.CarParams, CP_SP: structs.CarParamsSP, pa
     CP_SP.volkswagenHCADeltaRate = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate, 10)
     CP_SP.volkswagenHCACentering = (vw_hca_mode == VolkswagenHCAMode.HCA_7_CENTERING)
     CP_SP.volkswagenHCACenteringFullAuthority = int(params_dict.get("VolkswagenHCACenteringFullAuthority", 0)) == 1
+
+    from opendbc.car.volkswagen.values import VolkswagenFlags
+    if (CP.flags & VolkswagenFlags.PQ or CP.flags & VolkswagenFlags.MLB) and vw_hca_mode == VolkswagenHCAMode.HCA_7_PID:
+      CP.lateralTuning.init('pid')
+      CP.lateralTuning.pid.kpBP = [0.]
+      CP.lateralTuning.pid.kiBP = [0.]
+      CP.lateralTuning.pid.kf = 0.00006
+      CP.lateralTuning.pid.kpV = [0.6]
+      CP.lateralTuning.pid.kiV = [0.2]

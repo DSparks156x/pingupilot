@@ -74,7 +74,7 @@ class VolkswagenSettingsMici(BrandSettingsMici):
     self.hca_mode = BigMultiParamToggle(
       tr("HCA Mode"),
       "VolkswagenHCAMode",
-      [tr("HCA 5"), tr("HCA 7"), tr("HCA 7 Centering"), tr("HCA 7 Alt Controller"), tr("HCA 7 Map Controller")]
+      [tr("HCA 5"), tr("HCA 7"), tr("HCA 7 Centering"), tr("HCA 7 Alt Controller"), tr("HCA 7 Map Controller"), tr("HCA 7 PID Controller")]
     )
 
     self.hca_delta_rate = BigMultiParamToggle(
