@@ -27,13 +27,23 @@ class VolkswagenSettings(BrandSettings):
       inline=False
     )
 
-    self.hca_delta_rate = multiple_button_item_sp(
-      tr("HCA Delta Rate"),
-      tr("Adjust the HCA delta rate."),
-      [tr("±5"), tr("±10"), tr("±30"), tr("±50")],
+    self.hca_delta_rate_up = multiple_button_item_sp(
+      tr("HCA Delta Rate Up"),
+      tr("Adjust the HCA delta rate up."),
+      [tr("10"), tr("30"), tr("50"), tr("150"), tr("300")],
       button_width=200,
-      callback=lambda index: ui_state.params.put("VolkswagenHCADeltaRate", index),
-      param="VolkswagenHCADeltaRate",
+      callback=lambda index: ui_state.params.put("VolkswagenHCADeltaRateUp", index),
+      param="VolkswagenHCADeltaRateUp",
+      inline=False
+    )
+
+    self.hca_delta_rate_down = multiple_button_item_sp(
+      tr("HCA Delta Rate Down"),
+      tr("Adjust the HCA delta rate down."),
+      [tr("10"), tr("30"), tr("50"), tr("150"), tr("300")],
+      button_width=200,
+      callback=lambda index: ui_state.params.put("VolkswagenHCADeltaRateDown", index),
+      param="VolkswagenHCADeltaRateDown",
       inline=False
     )
 
@@ -47,7 +57,8 @@ class VolkswagenSettings(BrandSettings):
 
     self.items = [
       self.hca_mode,
-      self.hca_delta_rate,
+      self.hca_delta_rate_up,
+      self.hca_delta_rate_down,
       self.experimental_long,
     ]
 
@@ -81,11 +92,15 @@ class VolkswagenSettings(BrandSettings):
       self.alpha_long_available = not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
 
     self.hca_mode.set_visible(self.is_pq)
-    self.hca_delta_rate.set_visible(self.is_pq)
+    self.hca_delta_rate_up.set_visible(self.is_pq)
+    self.hca_delta_rate_down.set_visible(self.is_pq)
     self.experimental_long.set_visible(self.alpha_long_available)
 
     hca_mode_param = int(ui_state.params.get("VolkswagenHCAMode") or "1")
     self.hca_mode.action_item.set_selected_button(hca_mode_param)
 
-    hca_delta_rate_param = int(ui_state.params.get("VolkswagenHCADeltaRate") or "1")
-    self.hca_delta_rate.action_item.set_selected_button(hca_delta_rate_param)
+    hca_delta_rate_up_param = int(ui_state.params.get("VolkswagenHCADeltaRateUp") or "0")
+    self.hca_delta_rate_up.action_item.set_selected_button(hca_delta_rate_up_param)
+
+    hca_delta_rate_down_param = int(ui_state.params.get("VolkswagenHCADeltaRateDown") or "0")
+    self.hca_delta_rate_down.action_item.set_selected_button(hca_delta_rate_down_param)

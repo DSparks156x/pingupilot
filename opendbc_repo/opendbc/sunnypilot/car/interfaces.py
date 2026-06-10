@@ -170,10 +170,12 @@ def _initialize_toyota(CP: structs.CarParams, CP_SP: structs.CarParamsSP, params
 def _initialize_volkswagen(CP: structs.CarParams, CP_SP: structs.CarParamsSP, params_dict: dict[str, str]) -> None:
   if CP.brand == 'volkswagen':
     vw_hca_mode = int(params_dict.get("VolkswagenHCAMode", 1))
-    vw_hca_delta_rate = int(params_dict.get("VolkswagenHCADeltaRate", 1))
+    vw_hca_delta_rate_up = int(params_dict.get("VolkswagenHCADeltaRateUp", 0))
+    vw_hca_delta_rate_down = int(params_dict.get("VolkswagenHCADeltaRateDown", 0))
 
     CP_SP.volkswagenHCAMode = VOLKSWAGEN_HCA_MODE_MAP.get(vw_hca_mode, 7)
-    CP_SP.volkswagenHCADeltaRate = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate, 10)
+    CP_SP.volkswagenHCADeltaRateUp = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate_up, 10)
+    CP_SP.volkswagenHCADeltaRateDown = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate_down, 10)
     CP_SP.volkswagenHCACentering = (vw_hca_mode == VolkswagenHCAMode.HCA_7_CENTERING)
     CP_SP.volkswagenHCACenteringFullAuthority = int(params_dict.get("VolkswagenHCACenteringFullAuthority", 0)) == 1
 
@@ -183,5 +185,5 @@ def _initialize_volkswagen(CP: structs.CarParams, CP_SP: structs.CarParamsSP, pa
       CP.lateralTuning.pid.kpBP = [0.]
       CP.lateralTuning.pid.kiBP = [0.]
       CP.lateralTuning.pid.kf = 0.00006
-      CP.lateralTuning.pid.kpV = [0.6]
-      CP.lateralTuning.pid.kiV = [0.2]
+      CP.lateralTuning.pid.kpV = [0.15]
+      CP.lateralTuning.pid.kiV = [0.05]

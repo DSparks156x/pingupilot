@@ -67,7 +67,8 @@ class CarParamsSP:
   intelligentCruiseButtonManagementAvailable: bool = auto_field()
   enableGasInterceptor: bool = auto_field()
   volkswagenHCAMode: int = auto_field()
-  volkswagenHCADeltaRate: int = auto_field()
+  volkswagenHCADeltaRateUp: int = auto_field()
+  volkswagenHCADeltaRateDown: int = auto_field()
   volkswagenHCACentering: bool = auto_field()
 
   neuralNetworkLateralControl: 'CarParamsSP.NeuralNetworkLateralControl' = field(default_factory=lambda: CarParamsSP.NeuralNetworkLateralControl())

@@ -354,9 +354,10 @@ struct CarParamsSP @0x80ae746ee2596b11 {
 
   # Volkswagen HCA (Helfende Hände / Lane Assist) settings
   volkswagenHCAMode @6 :UInt8;         # HCA message type: 5=HCA5, 7=HCA7, 7+centering=HCA7_CENTERING
-  volkswagenHCADeltaRate @7 :UInt8;    # Steer delta rate in HCA counts/frame
+  volkswagenHCADeltaRateUp @7 :UInt8;  # Steer delta rate up in HCA counts/frame
   volkswagenHCACentering @8 :Bool;     # Enable virtual centering force for HCA7
   volkswagenHCACenteringFullAuthority @9 :Bool; # Emulate HCA5 authority behavior
+  volkswagenHCADeltaRateDown @10 :UInt8; # Steer delta rate down in HCA counts/frame
 
   neuralNetworkLateralControl @2 :NeuralNetworkLateralControl;
 

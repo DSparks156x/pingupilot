@@ -77,10 +77,16 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       [tr("HCA 5"), tr("HCA 7"), tr("HCA 7 Centering"), tr("HCA 7 Alt Controller"), tr("HCA 7 Map Controller"), tr("HCA 7 PID Controller")]
     )
 
-    self.hca_delta_rate = BigMultiParamToggle(
-      tr("HCA Delta Rate"),
-      "VolkswagenHCADeltaRate",
-      [tr("±5"), tr("±10"), tr("±30"), tr("±50")]
+    self.hca_delta_rate_up = BigMultiParamToggle(
+      tr("HCA Delta Rate Up"),
+      "VolkswagenHCADeltaRateUp",
+      [tr("10"), tr("30"), tr("50"), tr("150"), tr("300")]
+    )
+
+    self.hca_delta_rate_down = BigMultiParamToggle(
+      tr("HCA Delta Rate Down"),
+      "VolkswagenHCADeltaRateDown",
+      [tr("10"), tr("30"), tr("50"), tr("150"), tr("300")]
     )
 
     from opendbc.sunnypilot.car.volkswagen.values import VOLKSWAGEN_HCA_LAT_JERK_FACTOR_STEPS, VOLKSWAGEN_HCA_LAT_ACCEL_FACTOR_STEPS
@@ -108,7 +114,8 @@ class VolkswagenSettingsMici(BrandSettingsMici):
 
     self.items = [
       self.hca_mode,
-      self.hca_delta_rate,
+      self.hca_delta_rate_up,
+      self.hca_delta_rate_down,
       self.lat_jerk_factor,
       self.lat_accel_factor,
       self.hca_centering_full_authority,
@@ -145,7 +152,8 @@ class VolkswagenSettingsMici(BrandSettingsMici):
       is_long_available = not (config.flags & VolkswagenFlags.PQ_CC_ONLY)
 
     self.hca_mode.set_visible(is_pq)
-    self.hca_delta_rate.set_visible(is_pq)
+    self.hca_delta_rate_up.set_visible(is_pq)
+    self.hca_delta_rate_down.set_visible(is_pq)
     self.lat_jerk_factor.set_visible(is_pq)
     self.hca_centering_full_authority.set_visible(is_pq)
     self.experimental_long.set_visible(is_long_available)

@@ -45,8 +45,8 @@ class CarController(CarControllerBase):
 
     if CP.flags & VolkswagenFlags.PQ:
       self.CCS = pqcan
-      self.CCP.STEER_DELTA_UP = self.CP_SP.volkswagenHCADeltaRate
-      self.CCP.STEER_DELTA_DOWN = self.CP_SP.volkswagenHCADeltaRate
+      self.CCP.STEER_DELTA_UP = self.CP_SP.volkswagenHCADeltaRateUp
+      self.CCP.STEER_DELTA_DOWN = self.CP_SP.volkswagenHCADeltaRateDown
     elif CP.flags & VolkswagenFlags.MLB:
       self.CCS = mlbcan
     else:
@@ -72,10 +72,10 @@ class CarController(CarControllerBase):
     if CC.latActive and not self.lat_active_prev:
       try:
         from opendbc.sunnypilot.car.volkswagen.values import VOLKSWAGEN_HCA_DELTA_RATE_MAP
-        vw_hca_delta_rate = int(self.params.get("VolkswagenHCADeltaRate") or 1)
-        new_rate = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate, 10)
-        self.CCP.STEER_DELTA_UP = new_rate
-        self.CCP.STEER_DELTA_DOWN = new_rate
+        vw_hca_delta_rate_up = int(self.params.get("VolkswagenHCADeltaRateUp") or 0)
+        vw_hca_delta_rate_down = int(self.params.get("VolkswagenHCADeltaRateDown") or 0)
+        self.CCP.STEER_DELTA_UP = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate_up, 10)
+        self.CCP.STEER_DELTA_DOWN = VOLKSWAGEN_HCA_DELTA_RATE_MAP.get(vw_hca_delta_rate_down, 10)
       except ValueError:
         pass
     self.lat_active_prev = CC.latActive

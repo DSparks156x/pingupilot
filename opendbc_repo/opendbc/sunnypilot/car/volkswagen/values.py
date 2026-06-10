@@ -18,10 +18,11 @@ class VolkswagenHCAMode(IntEnum):
 
 
 class VolkswagenHCADeltaRate(IntEnum):
-  RATE_5 = 0
-  RATE_10 = 1
-  RATE_30 = 2
-  RATE_50 = 3
+  RATE_10 = 0
+  RATE_30 = 1
+  RATE_50 = 2
+  RATE_150 = 3
+  RATE_300 = 4
 
 
 VOLKSWAGEN_HCA_MODE_MAP = {
@@ -34,10 +35,11 @@ VOLKSWAGEN_HCA_MODE_MAP = {
 }
 
 VOLKSWAGEN_HCA_DELTA_RATE_MAP = {
-  VolkswagenHCADeltaRate.RATE_5: 5,
   VolkswagenHCADeltaRate.RATE_10: 10,
   VolkswagenHCADeltaRate.RATE_30: 30,
   VolkswagenHCADeltaRate.RATE_50: 50,
+  VolkswagenHCADeltaRate.RATE_150: 150,
+  VolkswagenHCADeltaRate.RATE_300: 300,
 }
 
 VOLKSWAGEN_HCA_LAT_JERK_FACTOR_STEPS = [
