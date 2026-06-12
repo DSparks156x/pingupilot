@@ -106,14 +106,16 @@ class Controls(ControlsExt):
     self.curvature = -self.VM.calc_curvature(steer_angle_without_offset, CS.vEgo, lp.roll)
 
     # Update Torque Params
-    if self.CP.lateralTuning.which() == 'torque':
+    if hasattr(self.LaC, 'update_live_torque_params'):
       torque_params = self.sm['liveTorqueParameters']
       if self.sm.all_checks(['liveTorqueParameters']) and torque_params.useParams:
         self.LaC.update_live_torque_params(torque_params.latAccelFactorFiltered, torque_params.latAccelOffsetFiltered,
                                            torque_params.frictionCoefficientFiltered)
 
-        self.LaC.extension.update_limits()
+        if hasattr(self.LaC, 'extension'):
+          self.LaC.extension.update_limits()
 
+    if hasattr(self.LaC, 'extension'):
       self.LaC.extension.update_model_v2(self.sm['modelV2'])
 
       self.LaC.extension.update_lateral_lag(self.lat_delay)
@@ -146,20 +148,23 @@ class Controls(ControlsExt):
     if not CC.latActive:
       self.LaC.reset()
 
-      # Dynamically swap between standard, Alt, and Map controllers when disengaged (no reboot required)
-      if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")) and self.CP.lateralTuning.which() == 'torque':
+      # Dynamically swap between standard, Alt, Map, and PID controllers when disengaged (no reboot required)
+      if self.CP.carFingerprint.startswith(("VOLKSWAGEN", "AUDI", "SEAT", "SKODA", "CUPRA")):
         try:
           hca_mode = int(self.params.get("VolkswagenHCAMode") or 0)
           is_vw_alt_selected = (hca_mode == 3)
           is_vw_map_selected = (hca_mode == 4)
+          is_vw_pid_selected = (hca_mode == 5)
           
           # We need to import locally to check type
           from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
           from openpilot.selfdrive.controls.lib.latcontrol_torque_map import LatControlTorqueMap
+          from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
           
           is_vw_alt_active = isinstance(self.LaC, LatControlTorqueAlt)
           is_vw_map_active = isinstance(self.LaC, LatControlTorqueMap)
-          is_standard_active = not is_vw_alt_active and not is_vw_map_active
+          is_vw_pid_active = isinstance(self.LaC, LatControlPID)
+          is_standard_active = not is_vw_alt_active and not is_vw_map_active and not is_vw_pid_active
           
           if is_vw_alt_selected and not is_vw_alt_active:
             self.LaC = LatControlTorqueAlt(self.CP, self.CP_SP, self.CI, DT_CTRL)
@@ -167,7 +172,10 @@ class Controls(ControlsExt):
           elif is_vw_map_selected and not is_vw_map_active:
             self.LaC = LatControlTorqueMap(self.CP, self.CP_SP, self.CI, DT_CTRL)
             self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
-          elif not is_vw_alt_selected and not is_vw_map_selected and not is_standard_active:
+          elif is_vw_pid_selected and not is_vw_pid_active:
+            self.LaC = LatControlPID(self.CP, self.CP_SP, self.CI, DT_CTRL)
+            self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
+          elif not is_vw_alt_selected and not is_vw_map_selected and not is_vw_pid_selected and not is_standard_active:
             self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
             self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
         except ValueError:
@@ -262,12 +270,12 @@ class Controls(ControlsExt):
     cs.forceDecel = bool((self.sm['driverMonitoringState'].awarenessStatus < 0.) or
                          (self.sm['selfdriveState'].state == State.softDisabling))
 
-    lat_tuning = self.CP.lateralTuning.which()
+    from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
     if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
       cs.lateralControlState.angleState = lac_log
-    elif lat_tuning == 'pid':
+    elif isinstance(self.LaC, LatControlPID):
       cs.lateralControlState.pidState = lac_log
-    elif lat_tuning == 'torque':
+    else:
       cs.lateralControlState.torqueState = lac_log
 
     self.pm.send('controlsState', dat)

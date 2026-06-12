@@ -8,10 +8,24 @@ from openpilot.common.pid import PIDController
 class LatControlPID(LatControl):
   def __init__(self, CP, CP_SP, CI, dt):
     super().__init__(CP, CP_SP, CI, dt)
-    self.pid = PIDController((CP.lateralTuning.pid.kpBP, CP.lateralTuning.pid.kpV),
-                             (CP.lateralTuning.pid.kiBP, CP.lateralTuning.pid.kiV),
+    if CP.lateralTuning.which() == 'pid':
+      kpBP = CP.lateralTuning.pid.kpBP
+      kpV = CP.lateralTuning.pid.kpV
+      kiBP = CP.lateralTuning.pid.kiBP
+      kiV = CP.lateralTuning.pid.kiV
+      kf = CP.lateralTuning.pid.kf
+    else:
+      # Default Volkswagen PID parameters when dynamically swapped from torque
+      kpBP = [0.]
+      kpV = [0.15]
+      kiBP = [0.]
+      kiV = [0.05]
+      kf = 0.00006
+
+    self.pid = PIDController((kpBP, kpV),
+                             (kiBP, kiV),
                              pos_limit=self.steer_max, neg_limit=-self.steer_max)
-    self.ff_factor = CP.lateralTuning.pid.kf
+    self.ff_factor = kf
     self.get_steer_feedforward = CI.get_steer_feedforward_function()
 
   def update(self, active, CS, VM, params, steer_limited_by_safety, desired_curvature, calibrated_pose, curvature_limited, lat_delay):

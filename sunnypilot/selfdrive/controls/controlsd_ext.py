@@ -35,10 +35,11 @@ class ControlsExt(ModelStateBase):
     self.pm_services_ext = ['carControlSP']
 
   def initialize_lateral_control(self, lac, CI, dt):
-    # Don't override LatControlTorqueAlt and LatControlTorqueMap with V0
+    # Don't override LatControlTorqueAlt, LatControlTorqueMap, and LatControlPID with V0
     from openpilot.selfdrive.controls.lib.latcontrol_torque_alt import LatControlTorqueAlt
     from openpilot.selfdrive.controls.lib.latcontrol_torque_map import LatControlTorqueMap
-    if isinstance(lac, (LatControlTorqueAlt, LatControlTorqueMap)):
+    from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
+    if isinstance(lac, (LatControlTorqueAlt, LatControlTorqueMap, LatControlPID)):
       return lac
 
     enforce_torque_control = self.params.get_bool("EnforceTorqueControl")

@@ -231,10 +231,10 @@ static bool volkswagen_pq_tx_hook(const CANPacket_t *msg) {
       .max_torque =
           450, // 3.0 Nm (EPS side max of 3.0Nm with fault if violated)
       .max_rt_delta =
-          113, // 6 max rate up * 50Hz send rate * 250000 RT interval / 1000000
-               // = 75 ; 125 * 1.5 for safety pad = 113
+          188, // 10 max rate up * 50Hz send rate * 250000 RT interval / 1000000
+               // = 125 ; 125 * 1.5 for safety pad = 188
       .max_rate_up =
-          6, // 3.0 Nm/s RoC limit (EPS rack has own soft-limit of 5.0 Nm/s)
+          10, // 5.0 Nm/s RoC limit (EPS rack has own soft-limit of 5.0 Nm/s)
       .max_rate_down =
           10, // 5.0 Nm/s RoC limit (EPS rack has own soft-limit of 5.0 Nm/s)
       .driver_torque_multiplier = 3,
