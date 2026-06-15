@@ -2461,6 +2461,68 @@ class AudiSteeringTester:
       
     input("\nPress Enter to return to main menu...")
 
+  def run_monitor_0x200_0x201(self):
+    print("\033[H\033[J")
+    print("====================================================")
+    print("        MONITOR & LOG 0x200 / 0x201 CAN MESSAGES    ")
+    print("====================================================")
+    print("Stopping background daemon thread...")
+    
+    # Safely stop and join background daemon thread
+    self.stop_keepalive()
+    self.daemon_running = False
+    if self.daemon_thread:
+      self.daemon_thread.join(timeout=0.3)
+      self.daemon_thread = None
+
+    log_dir = "steering_test_logs"
+    if not os.path.exists(log_dir):
+      os.makedirs(log_dir)
+
+    timestamp = int(time.time())
+    filename = os.path.join(log_dir, f"monitor_0x200_0x201_{timestamp}.csv")
+    
+    print(f"Logging matched CAN frames to: {filename}")
+    print("Press Ctrl+C to stop monitoring and return to menu.")
+    print("--------------------------------------------------------------------------------")
+    print("   Time (s)   | Bus | Message ID | Data (Hex)")
+    print("--------------------------------------------------------------------------------")
+
+    try:
+      self.panda.can_recv() # Clear buffer
+      
+      with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["time_sec", "bus", "can_id_hex", "can_id_dec", "data_hex"])
+        
+        t_start = time.perf_counter()
+        
+        while True:
+          msgs = self.panda.can_recv() or []
+          for addr, dat, bus in msgs:
+            if addr in (0x200, 0x201):
+              elapsed = time.perf_counter() - t_start
+              data_hex = dat.hex()
+              id_hex = f"0x{addr:03X}"
+              
+              writer.writerow([f"{elapsed:.6f}", bus, id_hex, addr, data_hex])
+              csvfile.flush()
+              
+              print(f" {elapsed:12.6f} |  {bus:1d}  |    {id_hex}   | {data_hex}")
+              
+          time.sleep(0.005)
+          
+    except KeyboardInterrupt:
+      print("\nMonitoring stopped.")
+    finally:
+      # Restart background daemon thread for standby keepalive
+      self.daemon_running = True
+      self.daemon_thread = threading.Thread(target=self._bg_daemon_loop)
+      self.daemon_thread.daemon = True
+      self.daemon_thread.start()
+      self.start_keepalive("HCA")
+      input("\nPress Enter to return to the main menu...")
+
   def main_menu(self):
     while True:
       print("\033[H\033[J")
@@ -2477,10 +2539,11 @@ class AudiSteeringTester:
       print("  [8] Profile Ramped Torque Velocity Response (5s)")
       print("  [9] Profile Instant Full Torque Velocity Response (5s with Timeline Plot)")
       print("  [10] Execute Automated Torque Sweep Test Suite")
-      print("  [11] Exit")
+      print("  [11] Monitor and Log 0x200 & 0x201 CAN Messages")
+      print("  [12] Exit")
       print("====================================================")
       
-      choice = input("Enter choice (1-11): ").strip()
+      choice = input("Enter choice (1-12): ").strip()
       if choice == "1":
         self.run_pla_test()
       elif choice == "2":
@@ -2502,6 +2565,8 @@ class AudiSteeringTester:
       elif choice == "10":
         self.run_automated_sweep_test()
       elif choice == "11":
+        self.run_monitor_0x200_0x201()
+      elif choice == "12":
         print("\nExiting. Safe travels!")
         break
       else:
