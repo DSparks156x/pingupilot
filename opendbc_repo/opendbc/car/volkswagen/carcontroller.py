@@ -1,4 +1,6 @@
 import numpy as np
+import struct
+import cereal.messaging as messaging
 from opendbc.can import CANPacker
 from opendbc.car import Bus, DT_CTRL, structs
 from opendbc.car.lateral import apply_driver_steer_torque_limits
@@ -63,6 +65,17 @@ class CarController(CarControllerBase):
 
     self.params = Params()
     self.lat_active_prev = False
+
+    # Glovebox Pi UI TP2.0 responder initialization
+    self.is_pq = bool(CP.flags & VolkswagenFlags.PQ)
+    if self.is_pq:
+      self.sm = messaging.SubMaster(['modelV2', 'radarState'])
+      self.tp2_state = "DISCONNECTED"
+      self.tester_id = 0x307
+      self.comma_tx_id = 0x747
+      self.last_recv_time = 0.0
+      self.last_send_time = 0.0
+      self.seq = 0
 
   def update(self, CC, CC_SP, CS, now_nanos):
     actuators = CC.actuators
@@ -167,6 +180,329 @@ class CarController(CarControllerBase):
       new_actuators.torque = self.apply_torque_last / self.CCP.STEER_MAX
     new_actuators.torqueOutputCan = self.apply_torque_last
 
+    # Glovebox Pi TP2.0 responder
+    if self.is_pq:
+      can_sends.extend(self.update_tp2(CC, CS, now_nanos))
+
     self.gra_acc_counter_last = CS.gra_stock_values["COUNTER"]
     self.frame += 1
     return new_actuators, can_sends
+
+  def update_tp2(self, CC, CS, now_nanos):
+    sends = []
+    now_sec = now_nanos * 1e-9
+
+    # Update SubMaster (modelV2, radarState) non-blockingly
+    self.sm.update(0)
+
+    # Intercept incoming raw CAN packets saved in CS
+    raw_packets = getattr(CS, 'raw_can_packets', [])
+
+    # 1. Connection timeout monitoring (3.0 seconds)
+    if self.tp2_state != "DISCONNECTED" and (now_sec - self.last_recv_time) > 3.0:
+      self.tp2_state = "DISCONNECTED"
+
+    # 2. Process incoming packets
+    for log_mono_time, frames in raw_packets:
+      for address, dat, src in frames:
+        # Scenario A: In DISCONNECTED state, listen to setup request on 0x200
+        if self.tp2_state == "DISCONNECTED":
+          if address == 0x200 and len(dat) >= 7:
+            # Check Dest Module = 0x0C and Opcode = 0xC0
+            if dat[0] == 0x0C and dat[1] == 0xC0:
+              # Parse tester/Pi RX ID from Byte 4/5
+              self.tester_id = (dat[5] & 0x0F) << 8 | dat[4]
+              if 0x300 <= self.tester_id <= 0x307:
+                idx = self.tester_id - 0x300
+                self.comma_tx_id = 0x740 + idx
+
+                # Send Setup Response (arbitration_id = 0x20C)
+                rx_lsb = self.tester_id & 0xFF
+                rx_msb = (self.tester_id >> 8) & 0x0F
+                tx_lsb = self.comma_tx_id & 0xFF
+                tx_msb = (self.comma_tx_id >> 8) & 0x0F
+
+                resp_data = bytes([0x00, 0xD0, rx_lsb, rx_msb, tx_lsb, tx_msb, 0x01])
+                sends.append((0x20C, resp_data, self.CAN.pt))
+
+                self.tp2_state = "HANDSHAKE_RESPONSE_SENT"
+                self.last_recv_time = now_sec
+                self.last_send_time = now_sec
+
+        # Scenario B: In HANDSHAKE_RESPONSE_SENT state, listen for Parameters Request (0xA0) on Comma RX ID
+        elif self.tp2_state == "HANDSHAKE_RESPONSE_SENT":
+          if address == self.tester_id and len(dat) >= 1 and dat[0] == 0xA0:
+            # Send Parameters Response (A1) on Comma TX ID
+            resp_data = bytes([0xA1, 0x0F, 0x8A, 0xFF, 0x4A, 0xFF])
+            sends.append((self.comma_tx_id, resp_data, self.CAN.pt))
+
+            self.tp2_state = "CONNECTED"
+            self.last_recv_time = now_sec
+            self.last_send_time = now_sec
+            self.seq = 0
+
+        # Scenario C: In CONNECTED state, process keep-alives and disconnects on Comma RX ID
+        elif self.tp2_state == "CONNECTED":
+          if address == self.tester_id and len(dat) >= 1:
+            opcode_byte = dat[0]
+
+            # Keep Alive Request (A3) -> reply with Keep Alive Response (A1)
+            if opcode_byte == 0xA3:
+              sends.append((self.comma_tx_id, bytes([0xA1]), self.CAN.pt))
+              self.last_recv_time = now_sec
+              self.last_send_time = now_sec
+
+            # Keep Alive Ack/Response (A1)
+            elif opcode_byte == 0xA1:
+              self.last_recv_time = now_sec
+
+            # Disconnect (A8) -> reset back to DISCONNECTED
+            elif opcode_byte == 0xA8:
+              self.tp2_state = "DISCONNECTED"
+
+    # 3. In CONNECTED state, send keep-alive and data messages periodically
+    if self.tp2_state == "CONNECTED":
+      # Send periodic keep-alive ping (A3) every 2.0 seconds if no send occurred
+      if (now_sec - self.last_send_time) > 2.0:
+        sends.append((self.comma_tx_id, bytes([0xA3]), self.CAN.pt))
+        self.last_send_time = now_sec
+
+      # Send data messages at 10Hz (every 10 frames)
+      if self.frame % 10 == 0:
+        sends.extend(self.send_fast_state(CC, CS, now_sec))
+        sends.extend(self.send_path_lanes_state(now_sec))
+
+    return sends
+
+  def send_fast_state(self, CC, CS, now_sec):
+    # 1. engaged
+    engaged = CC.enabled
+
+    # 2. Extract 3 leads
+    lead0_dist = 255
+    lead0_lat_dist = 0.0
+    lead1_dist = 0
+    lead1_lat_dist = 0.0
+    lead2_dist = 0
+    lead2_lat_dist = 0.0
+    lead_detected = False
+
+    # Try radarState first for lead0 and lead1
+    if self.sm.seen['radarState']:
+      radar = self.sm['radarState']
+      if radar.leadOne.status:
+        lead_detected = True
+        lead0_dist = int(np.clip(radar.leadOne.dRel, 0, 255))
+        lead0_lat_dist = float(radar.leadOne.yRel)
+      if radar.leadTwo.status:
+        lead1_dist = int(np.clip(radar.leadTwo.dRel, 0, 255))
+        lead1_lat_dist = float(radar.leadTwo.yRel)
+
+    # Fallback/supplement with modelV2 leadsV3
+    if self.sm.seen['modelV2']:
+      model = self.sm['modelV2']
+      # If lead0 wasn't detected by radar but model sees a lead
+      if not lead_detected and len(model.leadsV3) > 0 and model.leadsV3[0].prob > 0.5:
+        lead_detected = True
+        lead0_dist = int(np.clip(model.leadsV3[0].x[0], 0, 255))
+        lead0_lat_dist = float(model.leadsV3[0].y[0])
+      # If lead1 wasn't detected by radar but model sees a second lead
+      if lead1_dist == 0 and len(model.leadsV3) > 1 and model.leadsV3[1].prob > 0.5:
+        lead1_dist = int(np.clip(model.leadsV3[1].x[0], 0, 255))
+        lead1_lat_dist = float(model.leadsV3[1].y[0])
+      # Lead2 is only in model
+      if len(model.leadsV3) > 2 and model.leadsV3[2].prob > 0.5:
+        lead2_dist = int(np.clip(model.leadsV3[2].x[0], 0, 255))
+        lead2_lat_dist = float(model.leadsV3[2].y[0])
+
+    # If still not detected, fallback to HUD leadVisible
+    if not lead_detected and CC.hudControl.leadVisible:
+      lead_detected = True
+      lead0_dist = 42
+      lead0_lat_dist = 0.0
+
+    # 3. model_confidence
+    confidence = 1.0
+    if self.sm.seen['modelV2']:
+      model = self.sm['modelV2']
+      if len(model.laneLineProbs) >= 4:
+        confidence = float(np.mean(model.laneLineProbs))
+
+    # 4. speed and max_speed
+    if not hasattr(self, 'is_metric'):
+      self.is_metric = self.params.get_bool("IsMetric")
+    elif self.frame % 100 == 0:
+      self.is_metric = self.params.get_bool("IsMetric")
+
+    v_ego = CS.out.vEgo
+    v_cruise = CS.out.vCruise
+
+    if self.is_metric:
+      speed = int(round(v_ego * 3.6))
+      max_speed = int(round(v_cruise))
+    else:
+      speed = int(round(v_ego * 2.23694))
+      max_speed = int(round(v_cruise * 0.621371))
+
+    speed = int(np.clip(speed, 0, 255))
+    max_speed = int(np.clip(max_speed, 0, 255))
+
+    # 5. steer_angle and steer_torque
+    steer_angle_raw = int(np.clip(round(CS.out.steeringAngleDeg / 0.05), -32768, 32767))
+    # use commanded torque output: CC.actuators.torque
+    steer_torque_raw = int(np.clip(round(CC.actuators.torque / 0.01), -128, 127))
+
+    # Scale lateral offsets
+    lead0_lat_dist_raw = int(np.clip(round(lead0_lat_dist / 0.1), -128, 127))
+    lead1_dist_raw = int(np.clip(round(lead1_dist), 0, 255))
+    lead1_lat_dist_raw = int(np.clip(round(lead1_lat_dist / 0.1), -128, 127))
+    lead2_dist_raw = int(np.clip(round(lead2_dist), 0, 255))
+    lead2_lat_dist_raw = int(np.clip(round(lead2_lat_dist / 0.1), -128, 127))
+
+    # Pack Fast State message payload (13 bytes)
+    flags_conf = (int(engaged) << 7) | (int(lead_detected) << 6) | (int(confidence * 63) & 0x3F)
+    payload = struct.pack(
+        ">B B B B B h b b B b B b",
+        0x01, flags_conf, speed, max_speed, lead_dist, steer_angle_raw, steer_torque_raw,
+        lead0_lat_dist_raw, lead1_dist_raw, lead1_lat_dist_raw, lead2_dist_raw, lead2_lat_dist_raw
+    )
+
+    # Encapsulate in TP2.0 frames
+    f1_header = 0x20 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f1_data = bytes([f1_header, 0x00, 0x0D]) + payload[0:5]
+
+    f2_header = 0x20 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f2_data = bytes([f2_header]) + payload[5:12]
+
+    f3_header = 0x30 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f3_data = bytes([f3_header]) + payload[12:13] + b"\x00\x00\x00\x00\x00\x00"
+
+    self.last_send_time = now_sec
+    return [
+        (self.comma_tx_id, f1_data, self.CAN.pt),
+        (self.comma_tx_id, f2_data, self.CAN.pt),
+        (self.comma_tx_id, f3_data, self.CAN.pt)
+    ]
+
+  def send_path_lanes_state(self, now_sec):
+    model = self.sm['modelV2'] if self.sm.seen['modelV2'] else None
+
+    a_6 = a_5 = a_4 = a_3 = a_2 = a_1 = c_p = 0.0
+    c = [0.0] * 4
+    d = [0.0] * 2
+    p = [0] * 4
+    re = [0] * 2
+
+    if model is not None and len(model.position.x) > 0:
+      x_plan = np.array(model.position.x)
+      y_plan = np.array(model.position.y)
+      mask = x_plan <= 30.0
+      x_fit = x_plan[mask]
+      y_fit = y_plan[mask]
+
+      if len(x_fit) >= 6:
+        c_p = y_fit[0]
+        y_offset = y_fit - c_p
+        X = np.vstack([x_fit**6, x_fit**5, x_fit**4, x_fit**3, x_fit**2, x_fit]).T
+        try:
+          coeffs, _, _, _ = np.linalg.lstsq(X, y_offset, rcond=None)
+          a_6, a_5, a_4, a_3, a_2, a_1 = coeffs
+        except Exception:
+          pass
+      else:
+        if len(y_fit) > 0:
+          c_p = y_fit[0]
+
+      # Determine lane offsets
+      for k in range(4):
+        if k < len(model.laneLines):
+          x_lane = np.array(model.laneLines[k].x)
+          y_lane = np.array(model.laneLines[k].y)
+          mask = x_lane <= 30.0
+          x_lane_fit = x_lane[mask]
+          y_lane_fit = y_lane[mask]
+          if len(x_lane_fit) > 0:
+            y_base = (a_6 * (x_lane_fit**6) + a_5 * (x_lane_fit**5) + a_4 * (x_lane_fit**4) +
+                      a_3 * (x_lane_fit**3) + a_2 * (x_lane_fit**2) + a_1 * x_lane_fit)
+            c[k] = float(np.mean(y_lane_fit - y_base))
+
+      # Determine road edge offsets
+      for j in range(2):
+        if j < len(model.roadEdges):
+          x_edge = np.array(model.roadEdges[j].x)
+          y_edge = np.array(model.roadEdges[j].y)
+          mask = x_edge <= 30.0
+          x_edge_fit = x_edge[mask]
+          y_edge_fit = y_edge[mask]
+          if len(x_edge_fit) > 0:
+            y_base = (a_6 * (x_edge_fit**6) + a_5 * (x_edge_fit**5) + a_4 * (x_edge_fit**4) +
+                      a_3 * (x_edge_fit**3) + a_2 * (x_edge_fit**2) + a_1 * x_edge_fit)
+            d[j] = float(np.mean(y_edge_fit - y_base))
+
+      # Determine lane line probs
+      for k in range(4):
+        if k < len(model.laneLineProbs):
+          p[k] = int(np.clip(round(model.laneLineProbs[k] * 10.0), 0, 15))
+
+      # Determine road edge probs
+      if len(model.roadEdges) > 0:
+        re[0] = 10
+      if len(model.roadEdges) > 1:
+        re[1] = 10
+
+    # Scaling & Clamping
+    a_6_raw = int(np.clip(round(a_6 / 1e-12), -32768, 32767))
+    a_5_raw = int(np.clip(round(a_5 / 1e-10), -32768, 32767))
+    a_4_raw = int(np.clip(round(a_4 / 1e-8), -32768, 32767))
+    a_3_raw = int(np.clip(round(a_3 / 1e-6), -32768, 32767))
+    a_2_raw = int(np.clip(round(a_2 / 1e-5), -32768, 32767))
+    a_1_raw = int(np.clip(round(a_1 / 1e-4), -32768, 32767))
+
+    c_p_raw = int(np.clip(round(c_p / 0.1), -128, 127))
+    c_0_raw = int(np.clip(round(c[0] / 0.1), -128, 127))
+    c_1_raw = int(np.clip(round(c[1] / 0.1), -128, 127))
+    c_2_raw = int(np.clip(round(c[2] / 0.1), -128, 127))
+    c_3_raw = int(np.clip(round(c[3] / 0.1), -128, 127))
+    d_0_raw = int(np.clip(round(d[0] / 0.1), -128, 127))
+    d_1_raw = int(np.clip(round(d[1] / 0.1), -128, 127))
+
+    probs_01 = (p[0] << 4) | p[1]
+    probs_23 = (p[2] << 4) | p[3]
+    probs_re = (re[0] << 4) | re[1]
+
+    # Pack payload
+    payload = struct.pack(
+        ">B h h h h h h b b b b b b b B B B",
+        0x02,
+        a_6_raw, a_5_raw, a_4_raw, a_3_raw, a_2_raw, a_1_raw,
+        c_p_raw, c_0_raw, c_1_raw, c_2_raw, c_3_raw, d_0_raw, d_1_raw,
+        probs_01, probs_23, probs_re
+    )
+
+    # Encapsulate in 4 TP2.0 continuation/last frames
+    f1_header = 0x20 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f1_data = bytes([f1_header, 0x00, 0x17]) + payload[0:5]
+
+    f2_header = 0x20 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f2_data = bytes([f2_header]) + payload[5:12]
+
+    f3_header = 0x20 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f3_data = bytes([f3_header]) + payload[12:19]
+
+    f4_header = 0x30 | (self.seq & 0x0F)
+    self.seq = (self.seq + 1) % 16
+    f4_data = bytes([f4_header]) + payload[19:23] + b"\x00\x00\x00"
+
+    self.last_send_time = now_sec
+    return [
+        (self.comma_tx_id, f1_data, self.CAN.pt),
+        (self.comma_tx_id, f2_data, self.CAN.pt),
+        (self.comma_tx_id, f3_data, self.CAN.pt),
+        (self.comma_tx_id, f4_data, self.CAN.pt)
+    ]

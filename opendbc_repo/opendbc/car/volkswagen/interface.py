@@ -8,6 +8,11 @@ class CarInterface(CarInterfaceBase):
   CarState = CarState
   CarController = CarController
 
+  def update(self, can_packets):
+    # Intercept raw incoming CAN packets for the TP2.0 responder
+    self.CS.raw_can_packets = can_packets
+    return super().update(can_packets)
+
   DRIVABLE_GEARS = (structs.CarState.GearShifter.eco, structs.CarState.GearShifter.sport,
                     structs.CarState.GearShifter.manumatic)
 
