@@ -234,8 +234,8 @@ class CarController(CarControllerBase):
         # Scenario B: In HANDSHAKE_RESPONSE_SENT state, listen for Parameters Request (0xA0) on Comma RX ID
         elif self.tp2_state == "HANDSHAKE_RESPONSE_SENT":
           if address == self.tester_id and len(dat) >= 1 and dat[0] == 0xA0:
-            # Send Parameters Response (A1) on Comma TX ID
-            resp_data = bytes([0xA1, 0x0F, 0x8A, 0xFF, 0x4A, 0xFF])
+            # Send Parameters Response (A1) on Comma TX ID (padded to 8 bytes for safety checks)
+            resp_data = bytes([0xA1, 0x0F, 0x8A, 0xFF, 0x4A, 0xFF, 0x00, 0x00])
             sends.append((self.comma_tx_id, resp_data, self.tp2_bus))
 
             self.tp2_state = "CONNECTED"
@@ -248,9 +248,9 @@ class CarController(CarControllerBase):
           if address == self.tester_id and len(dat) >= 1:
             opcode_byte = dat[0]
 
-            # Keep Alive Request (A3) -> reply with Keep Alive Response (A1)
+            # Keep Alive Request (A3) -> reply with Keep Alive Response (A1) (padded to 8 bytes for safety checks)
             if opcode_byte == 0xA3:
-              sends.append((self.comma_tx_id, bytes([0xA1]), self.tp2_bus))
+              sends.append((self.comma_tx_id, bytes([0xA1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), self.tp2_bus))
               self.last_recv_time = now_sec
               self.last_send_time = now_sec
 
@@ -264,9 +264,9 @@ class CarController(CarControllerBase):
 
     # 3. In CONNECTED state, send keep-alive and data messages periodically
     if self.tp2_state == "CONNECTED":
-      # Send periodic keep-alive ping (A3) every 2.0 seconds if no send occurred
+      # Send periodic keep-alive ping (A3) every 2.0 seconds if no send occurred (padded to 8 bytes for safety checks)
       if (now_sec - self.last_send_time) > 2.0:
-        sends.append((self.comma_tx_id, bytes([0xA3]), self.tp2_bus))
+        sends.append((self.comma_tx_id, bytes([0xA3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), self.tp2_bus))
         self.last_send_time = now_sec
 
       # Send data messages at 10Hz (every 10 frames)
