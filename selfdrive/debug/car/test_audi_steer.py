@@ -2523,6 +2523,111 @@ class AudiSteeringTester:
       self.start_keepalive("HCA")
       input("\nPress Enter to return to the main menu...")
 
+  def run_raw_can_send(self):
+    print("\033[H\033[J")
+    print("====================================================")
+    print("            RAW CAN ID SEND TOOL                    ")
+    print("====================================================")
+    print("Send arbitrary CAN frames by specifying a hex ID and")
+    print("hex payload bytes. Payload is zero-padded to 8 bytes.")
+    print("====================================================")
+    print("\nExamples:")
+    print("  ID: 7e0   Payload: 02 01 00")
+    print("  ID: 200   Payload: ff,01,aa     (commas ok)")
+    print("  ID: 300   Payload:              (sends 8x 00)")
+    print("")
+
+    last_arb_id = None
+    last_payload = None
+
+    try:
+      while True:
+        # --- Get CAN ID ---
+        if last_arb_id is not None:
+          id_prompt = f"CAN ID hex [Enter=0x{last_arb_id:03X}] (q to quit): "
+        else:
+          id_prompt = "CAN ID hex (q to quit): "
+        id_input = input(id_prompt).strip()
+
+        if id_input.lower() == 'q':
+          break
+
+        if id_input == '' and last_arb_id is not None:
+          arb_id = last_arb_id
+        else:
+          try:
+            arb_id = int(id_input, 16)
+          except ValueError:
+            print("\033[91mInvalid hex ID. Try again.\033[0m")
+            continue
+
+        # --- Get payload ---
+        if last_payload is not None:
+          pay_prompt = f"Payload hex bytes [Enter={' '.join(f'{b:02X}' for b in last_payload)}]: "
+        else:
+          pay_prompt = "Payload hex bytes (space/comma separated, default all 00): "
+        pay_input = input(pay_prompt).strip()
+
+        if pay_input == '' and last_payload is not None:
+          payload = list(last_payload)
+        elif pay_input == '':
+          payload = []
+        else:
+          # Accept space or comma separated hex bytes
+          pay_input = pay_input.replace(',', ' ')
+          tokens = pay_input.split()
+          try:
+            payload = [int(t, 16) & 0xFF for t in tokens]
+          except ValueError:
+            print("\033[91mInvalid hex payload bytes. Try again.\033[0m")
+            continue
+
+        # Pad or truncate to 8 bytes
+        if len(payload) > 8:
+          print(f"\033[93mWarning: payload truncated from {len(payload)} to 8 bytes.\033[0m")
+          payload = payload[:8]
+        while len(payload) < 8:
+          payload.append(0x00)
+
+        last_arb_id = arb_id
+        last_payload = list(payload)
+
+        dat = bytes(payload)
+
+        # --- Send ---
+        try:
+          self.panda.can_send(arb_id, dat, self.bus)
+          print(f"\033[92mSENT\033[0m  0x{arb_id:03X}  [{' '.join(f'{b:02X}' for b in dat)}]  bus={self.bus}")
+        except Exception as e:
+          print(f"\033[91mSend failed: {e}\033[0m")
+          continue
+
+        # --- Listen for responses briefly (500ms) ---
+        print("Listening for responses (500ms)...")
+        listen_start = time.perf_counter()
+        rx_count = 0
+        while time.perf_counter() - listen_start < 0.5:
+          try:
+            msgs = self.panda.can_recv() or []
+          except Exception:
+            msgs = []
+          for rx_addr, rx_data, rx_bus in msgs:
+            # Show all traffic, but highlight responses to our ID
+            tag = "\033[96m>>\033[0m" if rx_addr == arb_id else "  "
+            hex_dat = ' '.join(f'{b:02X}' for b in rx_data)
+            print(f"  {tag} 0x{rx_addr:03X}  [{hex_dat}]  bus={rx_bus}")
+            rx_count += 1
+          time.sleep(0.01)
+
+        if rx_count == 0:
+          print("  (no CAN traffic received)")
+        print("")
+
+    except KeyboardInterrupt:
+      print("\n")
+
+    input("Press Enter to return to the main menu...")
+
   def main_menu(self):
     while True:
       print("\033[H\033[J")
@@ -2540,10 +2645,11 @@ class AudiSteeringTester:
       print("  [9] Profile Instant Full Torque Velocity Response (5s with Timeline Plot)")
       print("  [10] Execute Automated Torque Sweep Test Suite")
       print("  [11] Monitor and Log 0x200 & 0x201 CAN Messages")
-      print("  [12] Exit")
+      print("  [12] Send Raw CAN ID (arbitrary frame sender)")
+      print("  [13] Exit")
       print("====================================================")
       
-      choice = input("Enter choice (1-12): ").strip()
+      choice = input("Enter choice (1-13): ").strip()
       if choice == "1":
         self.run_pla_test()
       elif choice == "2":
@@ -2567,6 +2673,8 @@ class AudiSteeringTester:
       elif choice == "11":
         self.run_monitor_0x200_0x201()
       elif choice == "12":
+        self.run_raw_can_send()
+      elif choice == "13":
         print("\nExiting. Safe travels!")
         break
       else:
