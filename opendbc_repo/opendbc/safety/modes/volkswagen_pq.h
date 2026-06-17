@@ -64,7 +64,8 @@ static safety_config volkswagen_pq_init(uint16_t param) {
       {0x744, 2, 8, .check_relay = false},
       {0x745, 2, 8, .check_relay = false},
       {0x746, 2, 8, .check_relay = false},
-      {0x747, 2, 8, .check_relay = false}};
+      {0x747, 2, 8, .check_relay = false},
+      {0x6DA, 2, 8, .check_relay = false}};
   static const CanMsg VOLKSWAGEN_PQ_LONG_TX_MSGS[] = {
       {MSG_HCA_1, 0, 5, .check_relay = true},
       {MSG_LDW_1, 0, 8, .check_relay = true},
@@ -78,7 +79,8 @@ static safety_config volkswagen_pq_init(uint16_t param) {
       {0x744, 2, 8, .check_relay = false},
       {0x745, 2, 8, .check_relay = false},
       {0x746, 2, 8, .check_relay = false},
-      {0x747, 2, 8, .check_relay = false}};
+      {0x747, 2, 8, .check_relay = false},
+      {0x6DA, 2, 8, .check_relay = false}};
 
   static const CanMsg VOLKSWAGEN_PQ_STOCK_TX_MSGS_BUS1[] = {
       {MSG_HCA_1, 1, 5, .check_relay = true},
@@ -92,7 +94,8 @@ static safety_config volkswagen_pq_init(uint16_t param) {
       {0x744, 1, 8, .check_relay = false},
       {0x745, 1, 8, .check_relay = false},
       {0x746, 1, 8, .check_relay = false},
-      {0x747, 1, 8, .check_relay = false}};
+      {0x747, 1, 8, .check_relay = false},
+      {0x6DA, 1, 8, .check_relay = false}};
   static const CanMsg VOLKSWAGEN_PQ_LONG_TX_MSGS_BUS1[] = {
       {MSG_HCA_1, 1, 5, .check_relay = true},
       {MSG_LDW_1, 1, 8, .check_relay = true},
@@ -106,7 +109,8 @@ static safety_config volkswagen_pq_init(uint16_t param) {
       {0x744, 1, 8, .check_relay = false},
       {0x745, 1, 8, .check_relay = false},
       {0x746, 1, 8, .check_relay = false},
-      {0x747, 1, 8, .check_relay = false}};
+      {0x747, 1, 8, .check_relay = false},
+      {0x6DA, 1, 8, .check_relay = false}};
 
   static RxCheck volkswagen_pq_rx_checks[] = {
       {.msg = {{MSG_LENKHILFE_3, 0, 6, 100U, .max_counter = 15U,

@@ -71,8 +71,8 @@ class CarController(CarControllerBase):
     if self.is_pq:
       self.sm = messaging.SubMaster(['modelV2', 'radarState'])
       self.tp2_state = "DISCONNECTED"
-      self.tester_id = 0x307
-      self.comma_tx_id = 0x747
+      self.tester_id = 0x67A
+      self.comma_tx_id = 0x6DA
       self.tp2_bus = 1 if (CP.flags & VolkswagenFlags.NO_EXT_CAN) else 2
       self.last_recv_time = 0.0
       self.last_send_time = 0.0
@@ -206,7 +206,7 @@ class CarController(CarControllerBase):
     # 2. Process incoming packets
     for log_mono_time, frames in raw_packets:
       for address, dat, src in frames:
-        if address == 0x200 or address == 0x21D or (0x300 <= address <= 0x307) or (0x740 <= address <= 0x747):
+        if address == 0x67A or address == 0x6DA:
           msg_str = f"[{now_sec:.3f}] TP2 RX: addr=0x{address:X} state={self.tp2_state} data={dat.hex()} bus={src}\n"
           print(msg_str.strip(), flush=True)
           try:
@@ -215,61 +215,36 @@ class CarController(CarControllerBase):
           except:
             pass
 
-        # Scenario A: In DISCONNECTED state, listen to setup request on 0x200
-        if self.tp2_state == "DISCONNECTED":
-          if address == 0x200 and len(dat) >= 7:
-            # Check Dest Module = 0x1D (Park Assist, coded to powertrain bus) and Opcode = 0xC0
-            if dat[0] == 0x1D and dat[1] == 0xC0:
-              # Parse tester/Pi RX ID from Byte 4/5
-              self.tester_id = (dat[5] & 0x0F) << 8 | dat[4]
-              if 0x300 <= self.tester_id <= 0x307:
-                idx = self.tester_id - 0x300
-                self.comma_tx_id = 0x740 + idx
-                self.tp2_bus = src
+        # Handle Parameter Request (A0) at any time to establish or reset the connection
+        if address == 0x67A and len(dat) >= 1 and dat[0] == 0xA0:
+          self.tp2_bus = src
+          # Send Parameters Response (A1) on Comma TX ID (padded to 8 bytes for safety checks)
+          resp_data = bytes([0xA1, 0x0F, 0x8A, 0xFF, 0x4A, 0xFF, 0x00, 0x00])
+          sends.append((self.comma_tx_id, resp_data, self.tp2_bus))
 
-                # Send Setup Response (arbitration_id = 0x21D, i.e. 0x200 + module 0x1D)
-                rx_lsb = self.tester_id & 0xFF
-                rx_msb = (self.tester_id >> 8) & 0x0F
-                tx_lsb = self.comma_tx_id & 0xFF
-                tx_msb = (self.comma_tx_id >> 8) & 0x0F
+          self.tp2_state = "CONNECTED"
+          self.last_recv_time = now_sec
+          self.last_send_time = now_sec
+          self.seq = 0
 
-                resp_data = bytes([0x00, 0xD0, rx_lsb, rx_msb, tx_lsb, tx_msb, 0x01])
-                sends.append((0x21D, resp_data, self.tp2_bus))
+        # Process keep-alives and disconnects on Comma RX ID when CONNECTED
+        elif self.tp2_state == "CONNECTED" and address == self.tester_id and len(dat) >= 1:
+          self.tp2_bus = src
+          opcode_byte = dat[0]
 
-                self.tp2_state = "HANDSHAKE_RESPONSE_SENT"
-                self.last_recv_time = now_sec
-                self.last_send_time = now_sec
-
-        # Scenario B: In HANDSHAKE_RESPONSE_SENT state, listen for Parameters Request (0xA0) on Comma RX ID
-        elif self.tp2_state == "HANDSHAKE_RESPONSE_SENT":
-          if address == self.tester_id and len(dat) >= 1 and dat[0] == 0xA0:
-            # Send Parameters Response (A1) on Comma TX ID (padded to 8 bytes for safety checks)
-            resp_data = bytes([0xA1, 0x0F, 0x8A, 0xFF, 0x4A, 0xFF, 0x00, 0x00])
-            sends.append((self.comma_tx_id, resp_data, self.tp2_bus))
-
-            self.tp2_state = "CONNECTED"
+          # Keep Alive Request (A3) -> reply with Keep Alive Response (A1) (padded to 8 bytes for safety checks)
+          if opcode_byte == 0xA3:
+            sends.append((self.comma_tx_id, bytes([0xA1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), self.tp2_bus))
             self.last_recv_time = now_sec
             self.last_send_time = now_sec
-            self.seq = 0
 
-        # Scenario C: In CONNECTED state, process keep-alives and disconnects on Comma RX ID
-        elif self.tp2_state == "CONNECTED":
-          if address == self.tester_id and len(dat) >= 1:
-            opcode_byte = dat[0]
+          # Keep Alive Ack/Response (A1)
+          elif opcode_byte == 0xA1:
+            self.last_recv_time = now_sec
 
-            # Keep Alive Request (A3) -> reply with Keep Alive Response (A1) (padded to 8 bytes for safety checks)
-            if opcode_byte == 0xA3:
-              sends.append((self.comma_tx_id, bytes([0xA1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), self.tp2_bus))
-              self.last_recv_time = now_sec
-              self.last_send_time = now_sec
-
-            # Keep Alive Ack/Response (A1)
-            elif opcode_byte == 0xA1:
-              self.last_recv_time = now_sec
-
-            # Disconnect (A8) -> reset back to DISCONNECTED
-            elif opcode_byte == 0xA8:
-              self.tp2_state = "DISCONNECTED"
+          # Disconnect (A8) -> reset back to DISCONNECTED
+          elif opcode_byte == 0xA8:
+            self.tp2_state = "DISCONNECTED"
 
     # 3. In CONNECTED state, send keep-alive and data messages periodically
     if self.tp2_state == "CONNECTED":
