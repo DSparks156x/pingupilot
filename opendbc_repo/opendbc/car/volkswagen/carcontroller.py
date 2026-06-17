@@ -73,6 +73,7 @@ class CarController(CarControllerBase):
       self.tp2_state = "DISCONNECTED"
       self.tester_id = 0x307
       self.comma_tx_id = 0x747
+      self.tp2_bus = 1 if (CP.flags & VolkswagenFlags.NO_EXT_CAN) else 2
       self.last_recv_time = 0.0
       self.last_send_time = 0.0
       self.seq = 0
@@ -215,6 +216,7 @@ class CarController(CarControllerBase):
               if 0x300 <= self.tester_id <= 0x307:
                 idx = self.tester_id - 0x300
                 self.comma_tx_id = 0x740 + idx
+                self.tp2_bus = src
 
                 # Send Setup Response (arbitration_id = 0x20C)
                 rx_lsb = self.tester_id & 0xFF
@@ -223,7 +225,7 @@ class CarController(CarControllerBase):
                 tx_msb = (self.comma_tx_id >> 8) & 0x0F
 
                 resp_data = bytes([0x00, 0xD0, rx_lsb, rx_msb, tx_lsb, tx_msb, 0x01])
-                sends.append((0x20C, resp_data, self.CAN.pt))
+                sends.append((0x20C, resp_data, self.tp2_bus))
 
                 self.tp2_state = "HANDSHAKE_RESPONSE_SENT"
                 self.last_recv_time = now_sec
@@ -234,7 +236,7 @@ class CarController(CarControllerBase):
           if address == self.tester_id and len(dat) >= 1 and dat[0] == 0xA0:
             # Send Parameters Response (A1) on Comma TX ID
             resp_data = bytes([0xA1, 0x0F, 0x8A, 0xFF, 0x4A, 0xFF])
-            sends.append((self.comma_tx_id, resp_data, self.CAN.pt))
+            sends.append((self.comma_tx_id, resp_data, self.tp2_bus))
 
             self.tp2_state = "CONNECTED"
             self.last_recv_time = now_sec
@@ -248,7 +250,7 @@ class CarController(CarControllerBase):
 
             # Keep Alive Request (A3) -> reply with Keep Alive Response (A1)
             if opcode_byte == 0xA3:
-              sends.append((self.comma_tx_id, bytes([0xA1]), self.CAN.pt))
+              sends.append((self.comma_tx_id, bytes([0xA1]), self.tp2_bus))
               self.last_recv_time = now_sec
               self.last_send_time = now_sec
 
@@ -264,7 +266,7 @@ class CarController(CarControllerBase):
     if self.tp2_state == "CONNECTED":
       # Send periodic keep-alive ping (A3) every 2.0 seconds if no send occurred
       if (now_sec - self.last_send_time) > 2.0:
-        sends.append((self.comma_tx_id, bytes([0xA3]), self.CAN.pt))
+        sends.append((self.comma_tx_id, bytes([0xA3]), self.tp2_bus))
         self.last_send_time = now_sec
 
       # Send data messages at 10Hz (every 10 frames)
@@ -382,9 +384,9 @@ class CarController(CarControllerBase):
 
     self.last_send_time = now_sec
     return [
-        (self.comma_tx_id, f1_data, self.CAN.pt),
-        (self.comma_tx_id, f2_data, self.CAN.pt),
-        (self.comma_tx_id, f3_data, self.CAN.pt)
+        (self.comma_tx_id, f1_data, self.tp2_bus),
+        (self.comma_tx_id, f2_data, self.tp2_bus),
+        (self.comma_tx_id, f3_data, self.tp2_bus)
     ]
 
   def send_path_lanes_state(self, now_sec):
@@ -501,8 +503,8 @@ class CarController(CarControllerBase):
 
     self.last_send_time = now_sec
     return [
-        (self.comma_tx_id, f1_data, self.CAN.pt),
-        (self.comma_tx_id, f2_data, self.CAN.pt),
-        (self.comma_tx_id, f3_data, self.CAN.pt),
-        (self.comma_tx_id, f4_data, self.CAN.pt)
+        (self.comma_tx_id, f1_data, self.tp2_bus),
+        (self.comma_tx_id, f2_data, self.tp2_bus),
+        (self.comma_tx_id, f3_data, self.tp2_bus),
+        (self.comma_tx_id, f4_data, self.tp2_bus)
     ]
