@@ -206,7 +206,7 @@ class CarController(CarControllerBase):
     # 2. Process incoming packets
     for log_mono_time, frames in raw_packets:
       for address, dat, src in frames:
-        if address == 0x200 or address == 0x20C or (0x300 <= address <= 0x307) or (0x740 <= address <= 0x747):
+        if address == 0x200 or address == 0x21D or (0x300 <= address <= 0x307) or (0x740 <= address <= 0x747):
           msg_str = f"[{now_sec:.3f}] TP2 RX: addr=0x{address:X} state={self.tp2_state} data={dat.hex()} bus={src}\n"
           print(msg_str.strip(), flush=True)
           try:
@@ -218,8 +218,8 @@ class CarController(CarControllerBase):
         # Scenario A: In DISCONNECTED state, listen to setup request on 0x200
         if self.tp2_state == "DISCONNECTED":
           if address == 0x200 and len(dat) >= 7:
-            # Check Dest Module = 0x0C and Opcode = 0xC0
-            if dat[0] == 0x0C and dat[1] == 0xC0:
+            # Check Dest Module = 0x1D (Park Assist, coded to powertrain bus) and Opcode = 0xC0
+            if dat[0] == 0x1D and dat[1] == 0xC0:
               # Parse tester/Pi RX ID from Byte 4/5
               self.tester_id = (dat[5] & 0x0F) << 8 | dat[4]
               if 0x300 <= self.tester_id <= 0x307:
@@ -227,14 +227,14 @@ class CarController(CarControllerBase):
                 self.comma_tx_id = 0x740 + idx
                 self.tp2_bus = src
 
-                # Send Setup Response (arbitration_id = 0x20C)
+                # Send Setup Response (arbitration_id = 0x21D, i.e. 0x200 + module 0x1D)
                 rx_lsb = self.tester_id & 0xFF
                 rx_msb = (self.tester_id >> 8) & 0x0F
                 tx_lsb = self.comma_tx_id & 0xFF
                 tx_msb = (self.comma_tx_id >> 8) & 0x0F
 
                 resp_data = bytes([0x00, 0xD0, rx_lsb, rx_msb, tx_lsb, tx_msb, 0x01])
-                sends.append((0x20C, resp_data, self.tp2_bus))
+                sends.append((0x21D, resp_data, self.tp2_bus))
 
                 self.tp2_state = "HANDSHAKE_RESPONSE_SENT"
                 self.last_recv_time = now_sec
