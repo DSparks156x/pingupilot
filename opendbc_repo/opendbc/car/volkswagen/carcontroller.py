@@ -206,6 +206,15 @@ class CarController(CarControllerBase):
     # 2. Process incoming packets
     for log_mono_time, frames in raw_packets:
       for address, dat, src in frames:
+        if address == 0x200 or address == 0x20C or (0x300 <= address <= 0x307) or (0x740 <= address <= 0x747):
+          msg_str = f"[{now_sec:.3f}] TP2 RX: addr=0x{address:X} state={self.tp2_state} data={dat.hex()} bus={src}\n"
+          print(msg_str.strip(), flush=True)
+          try:
+            with open("/tmp/tp2_debug.log", "a") as log_f:
+              log_f.write(msg_str)
+          except:
+            pass
+
         # Scenario A: In DISCONNECTED state, listen to setup request on 0x200
         if self.tp2_state == "DISCONNECTED":
           if address == 0x200 and len(dat) >= 7:
@@ -273,6 +282,10 @@ class CarController(CarControllerBase):
       if self.frame % 10 == 0:
         sends.extend(self.send_fast_state(CC, CS, now_sec))
         sends.extend(self.send_path_lanes_state(now_sec))
+
+    if sends:
+      for addr, data, bus in sends:
+        print(f"TP2 TX: addr=0x{addr:X} state={self.tp2_state} data={data.hex()} bus={bus}", flush=True)
 
     return sends
 
