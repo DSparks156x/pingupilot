@@ -285,7 +285,13 @@ class CarController(CarControllerBase):
 
     if sends:
       for addr, data, bus in sends:
-        print(f"TP2 TX: addr=0x{addr:X} state={self.tp2_state} data={data.hex()} bus={bus}", flush=True)
+        msg_str = f"[{now_sec:.3f}] TP2 TX: addr=0x{addr:X} state={self.tp2_state} data={data.hex()} bus={bus}\n"
+        print(msg_str.strip(), flush=True)
+        try:
+          with open("/tmp/tp2_debug.log", "a") as log_f:
+            log_f.write(msg_str)
+        except:
+          pass
 
     return sends
 
