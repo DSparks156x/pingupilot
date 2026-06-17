@@ -359,7 +359,7 @@ class CarController(CarControllerBase):
     flags_conf = (int(engaged) << 7) | (int(lead_detected) << 6) | (int(confidence * 63) & 0x3F)
     payload = struct.pack(
         ">B B B B B h b b B b B b",
-        0x01, flags_conf, speed, max_speed, lead_dist, steer_angle_raw, steer_torque_raw,
+        0x01, flags_conf, speed, max_speed, lead0_dist, steer_angle_raw, steer_torque_raw,
         lead0_lat_dist_raw, lead1_dist_raw, lead1_lat_dist_raw, lead2_dist_raw, lead2_lat_dist_raw
     )
 
